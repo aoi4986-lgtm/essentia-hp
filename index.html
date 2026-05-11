@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Essentia株式会社｜つなぐ技術、ささえる心。</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <!-- スタイルシート -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===========================
+       ヘッダー
+  =========================== -->
+  <header id="header">
+    <div class="container">
+      <div class="header-inner">
+        <!-- ロゴ -->
+        <a href="#top" class="logo">
+          <img src="images/logo.svg" alt="Essentia株式会社" class="logo-img">
+          <span class="logo-name"><span>Essentia</span>株式会社</span>
+        </a>
+
+        <!-- PC ナビゲーション -->
+        <nav>
+          <ul class="nav-links">
+            <li><a href="#top">TOP</a></li>
+            <li><a href="#service">事業内容</a></li>
+            <li><a href="#greeting">代表挨拶</a></li>
+            <li><a href="#achievement">実績</a></li>
+            <li><a href="#contact" class="btn-contact-header">お問い合わせ</a></li>
+          </ul>
+        </nav>
+
+        <!-- ハンバーガーボタン（スマホ用） -->
+        <button class="hamburger" id="hamburger" aria-label="メニューを開く">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- スマホメニュー -->
+    <nav id="mobileMenu" class="mobile-menu">
+      <a href="#top">TOP</a>
+      <a href="#service">事業内容</a>
+      <a href="#greeting">代表挨拶</a>
+      <a href="#achievement">実績</a>
+      <a href="#contact">お問い合わせ</a>
+    </nav>
+  </header>
+
+
+  <!-- ===========================
+       TOPセクション（ヒーロー）
+  =========================== -->
+  <section id="top">
+    <div class="hero-content">
+      <div class="hero-badge">OA機器販売 ／ 高齢者施設紹介 ／ コンサルティング</div>
+      <h1 class="hero-title">
+        つなぐ技術、<br><span class="accent">ささえる心。</span>
+      </h1>
+      <p class="hero-sub">
+        お客様の課題に真摯に向き合い、<br>
+        最適なソリューションをご提供します。
+      </p>
+      <a href="#contact" class="btn-primary">
+        お問い合わせはこちら
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+    <div class="scroll-hint">SCROLL</div>
+  </section>
+
+
+  <!-- ===========================
+       事業内容セクション
+  =========================== -->
+  <section id="service">
+    <div class="container">
+      <span class="section-label">SERVICE</span>
+      <h2 class="section-title">事業内容</h2>
+      <p class="section-desc">
+        お客様のビジネスと生活を、多角的なサービスでサポートします。
+      </p>
+
+      <div class="service-grid">
+        <!-- 01 OA機器販売 -->
+        <div class="service-card fade-in">
+          <span class="svc-num">01</span>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="8" rx="1"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/><circle cx="18" cy="11" r="1" fill="white" stroke="none"/></svg>
+          </div>
+          <h3>OA機器販売</h3>
+          <p>複合機・プリンター・ファイルサーバーなど、オフィスに必要な機器を幅広くご提供。導入後のサポートも万全に対応いたします。</p>
+          <a href="#oa-assist" class="svc-btn">詳しく見る <span>→</span></a>
+        </div>
+
+        <!-- 02 高齢者施設紹介業 -->
+        <div class="service-card fade-in delay-1">
+          <span class="svc-num">02</span>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+          </div>
+          <h3>高齢者施設紹介業</h3>
+          <p>ご本人・ご家族の想いに寄り添い、最適な介護・高齢者施設をご紹介します。専門スタッフが入居までワンストップでサポート。</p>
+          <a href="#elderly-features" class="svc-btn">詳しく見る <span>→</span></a>
+        </div>
+
+        <!-- 03 コンサルティング -->
+        <div class="service-card fade-in delay-2">
+          <span class="svc-num">03</span>
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>コンサルティング</h3>
+          <p>業務改善・コスト削減・DX推進など、企業の課題解決をトータルでサポート。現場に寄り添った実践的な提案を行います。</p>
+          <a href="#consulting" class="svc-btn">詳しく見る <span>→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       OA機器 3つのアシストポイント
+  =========================== -->
+  <section id="oa-assist">
+    <div class="elderly-feat-bg">
+      <span class="ef-circle" style="width:280px;height:280px;background:radial-gradient(circle,#fed7aa,#ffedd5);top:-70px;left:-70px;"></span>
+      <span class="ef-circle" style="width:200px;height:200px;background:radial-gradient(circle,#fecaca,#fee2e2);bottom:-50px;left:18%;"></span>
+      <span class="ef-circle" style="width:160px;height:160px;background:radial-gradient(circle,#fde68a,#fef3c7);top:50px;right:12%;"></span>
+      <span class="ef-circle" style="width:180px;height:180px;background:radial-gradient(circle,#fbcfe8,#fce7f3);bottom:-30px;right:-30px;"></span>
+    </div>
+    <div class="container ef-container">
+      <div class="ef-title-wrap fade-in">
+        <h2 class="ef-title">
+          OA機器販売の<span class="ef-title-num">3</span>つのアシストポイント
+        </h2>
+      </div>
+      <div class="ef-grid ef-grid-3">
+        <!-- 01 -->
+        <div class="ef-card fade-in">
+          <div class="ef-num">01</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=600&auto=format&fit=crop&q=80" alt="OA機器コスト見直し">
+          </div>
+          <h3 class="ef-card-title">OA機器のコスト<br>見直しをアシスト</h3>
+          <p class="ef-card-desc">現状の機器・契約を見直し、最適なプランへ切り替え。無駄なコストを削減します。</p>
+        </div>
+        <!-- 02 -->
+        <div class="ef-card fade-in delay-1">
+          <div class="ef-num">02</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80" alt="快適な職場環境">
+          </div>
+          <h3 class="ef-card-title">快適で安全な職場<br>環境づくりをアシスト</h3>
+          <p class="ef-card-desc">最新機器の導入で、スタッフが快適・安心に働ける職場環境を実現します。</p>
+        </div>
+        <!-- 03 -->
+        <div class="ef-card fade-in delay-2">
+          <div class="ef-num">03</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&auto=format&fit=crop&q=80" alt="導入後の運用サポート">
+          </div>
+          <h3 class="ef-card-title">導入後の運用を<br>アシスト</h3>
+          <p class="ef-card-desc">設置・設定から操作説明・トラブル対応まで、導入後も万全のサポートを提供。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       高齢者施設紹介 4つの特徴セクション
+  =========================== -->
+  <section id="elderly-features">
+    <div class="elderly-feat-bg">
+      <!-- 背景の装飾サークル -->
+      <span class="ef-circle ef-c1"></span>
+      <span class="ef-circle ef-c2"></span>
+      <span class="ef-circle ef-c3"></span>
+      <span class="ef-circle ef-c4"></span>
+    </div>
+    <div class="container ef-container">
+      <!-- セクションタイトル -->
+      <div class="ef-title-wrap fade-in">
+        <h2 class="ef-title">
+          <span class="ef-title-brand"><span>E</span>ssenti<span>a</span></span>の高齢者施設紹介
+          <span class="ef-title-num">4</span>つの特徴
+        </h2>
+      </div>
+
+      <!-- 4つの特徴カード -->
+      <div class="ef-grid">
+        <!-- 01 -->
+        <div class="ef-card fade-in">
+          <div class="ef-num">01</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=600&auto=format&fit=crop&q=80" alt="介護のプロがサポート">
+          </div>
+          <h3 class="ef-card-title">介護のプロがサポート</h3>
+          <p class="ef-card-desc">経験豊富な専門スタッフが、介護の知識を活かして最適な施設選びをお手伝いします。</p>
+        </div>
+
+        <!-- 02 -->
+        <div class="ef-card fade-in delay-1">
+          <div class="ef-num">02</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&auto=format&fit=crop&q=80" alt="ご本人様の視点を大切に">
+          </div>
+          <h3 class="ef-card-title">ご本人様の視点を大切に</h3>
+          <p class="ef-card-desc">実際に暮らすのはご本人様。希望や状況に寄り添い、最適な施設をご提案します。</p>
+        </div>
+
+        <!-- 03 -->
+        <div class="ef-card fade-in delay-2">
+          <div class="ef-num">03</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1581056771107-24ca5f033842?w=600&auto=format&fit=crop&q=80" alt="最新の施設情報を提供">
+          </div>
+          <h3 class="ef-card-title">最新の施設情報を提供</h3>
+          <p class="ef-card-desc">訪問・見学した施設のリアルな情報をもとにご案内。相談だけでもOK！</p>
+        </div>
+
+        <!-- 04 -->
+        <div class="ef-card fade-in delay-3">
+          <div class="ef-num">04</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&auto=format&fit=crop&q=80" alt="入居まで一貫サポート">
+          </div>
+          <h3 class="ef-card-title">入居まで一貫サポート</h3>
+          <p class="ef-card-desc">ご相談から施設見学・入居手続きまで、ワンストップで丁寧にお付き合いします。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       コンサルティング 4つのサービス
+  =========================== -->
+  <section id="consulting">
+    <div class="elderly-feat-bg">
+      <span class="ef-circle" style="width:300px;height:300px;background:radial-gradient(circle,#bfdbfe,#dbeafe);top:-80px;left:-60px;"></span>
+      <span class="ef-circle" style="width:220px;height:220px;background:radial-gradient(circle,#c7d2fe,#e0e7ff);bottom:-60px;left:22%;"></span>
+      <span class="ef-circle" style="width:170px;height:170px;background:radial-gradient(circle,#a5f3fc,#cffafe);top:60px;right:8%;"></span>
+      <span class="ef-circle" style="width:190px;height:190px;background:radial-gradient(circle,#d9f99d,#ecfccb);bottom:-40px;right:-30px;"></span>
+    </div>
+    <div class="container ef-container">
+      <div class="ef-title-wrap fade-in">
+        <h2 class="ef-title">
+          コンサルティングの<span class="ef-title-num">4</span>つのサービス
+        </h2>
+      </div>
+      <div class="ef-grid fade-in">
+        <!-- 01 -->
+        <div class="ef-card">
+          <div class="ef-num">01</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&auto=format&fit=crop&q=80" alt="業務改善支援">
+          </div>
+          <h3 class="ef-card-title">業務改善支援</h3>
+          <p class="ef-card-desc">業務フローを可視化・見直し、現場の効率化と生産性向上を実現します。</p>
+        </div>
+        <!-- 02 -->
+        <div class="ef-card">
+          <div class="ef-num">02</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&auto=format&fit=crop&q=80" alt="コスト削減">
+          </div>
+          <h3 class="ef-card-title">コスト削減・<br>収益改善</h3>
+          <p class="ef-card-desc">固定費・変動費を分析し、総合的なコスト最適化で経営体質を改善します。</p>
+        </div>
+        <!-- 03 -->
+        <div class="ef-card">
+          <div class="ef-num">03</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80" alt="DX推進">
+          </div>
+          <h3 class="ef-card-title">DX・デジタル化<br>推進</h3>
+          <p class="ef-card-desc">クラウド活用・システム導入など、中小企業でも進めやすいDXを提案します。</p>
+        </div>
+        <!-- 04 -->
+        <div class="ef-card">
+          <div class="ef-num">04</div>
+          <div class="ef-img-wrap">
+            <img src="https://images.unsplash.com/photo-1553484771-371a605b060b?w=600&auto=format&fit=crop&q=80" alt="経営戦略立案">
+          </div>
+          <h3 class="ef-card-title">経営戦略・<br>新規事業立案</h3>
+          <p class="ef-card-desc">市場分析をもとに中長期の経営戦略を立案し、新規事業の実行まで伴走します。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       代表挨拶セクション
+  =========================== -->
+  <section id="greeting">
+    <div class="container">
+      <span class="section-label">MESSAGE</span>
+      <h2 class="section-title">代表挨拶</h2>
+
+      <div class="greeting-wrapper fade-in">
+        <!-- 代表写真 -->
+        <div class="greeting-photo">
+          <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&auto=format&fit=crop&q=80" alt="代表取締役 豊永 啓司">
+          <div class="greeting-name-card">
+            <span class="greeting-title-label">代表取締役</span>
+            <strong>豊永　啓司</strong>
+          </div>
+        </div>
+
+        <!-- 挨拶文 -->
+        <div class="greeting-body">
+          <h3 class="greeting-heading">
+            「つなぐ技術、ささえる心。」<br>
+            <span>— この言葉に込めた想い</span>
+          </h3>
+          <p>
+            このたびは、Essentia株式会社のホームページをご覧いただき、誠にありがとうございます。
+          </p>
+          <p>
+            私たちは、OA機器販売・高齢者施設紹介・コンサルティングという多角的な事業を通じて、企業と個人、そして地域社会をつなぐ役割を担ってまいります。
+          </p>
+          <p>
+            「技術」は時代とともに進化しますが、「人を支える心」は変わることのない、私たちの変わらない軸です。お客様一人ひとりの状況に真摯に向き合い、最適なご提案ができる会社でありたいと考えております。
+          </p>
+          <p>
+            2025年7月の設立以来、地域に根ざした誠実なサービスを提供し続けることをお約束いたします。どうぞお気軽にご相談ください。
+          </p>
+          <div class="greeting-sig">
+            <span>Essentia株式会社</span>
+            <strong>代表取締役　豊永　啓司</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       実績（お客様の声）セクション
+  =========================== -->
+  <section id="achievement">
+    <div class="container">
+      <span class="section-label">ACHIEVEMENT</span>
+      <h2 class="section-title">お客様の声</h2>
+      <p class="section-desc">
+        実際にご利用いただいたお客様からの声をご紹介します。
+      </p>
+
+      <!-- OA機器販売 -->
+      <div class="voice-category fade-in">
+        <div class="voice-category-label">
+          <span class="voice-icon">🖨️</span> OA機器販売
+        </div>
+        <div class="voice-grid voice-grid-2">
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>OA機器の入れ替えでコストが大幅に削減できました。導入後のサポートも迅速で、とても助かっています。次回もぜひお願いしたいです。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=11" alt="田中様">
+              <div class="voice-info">
+                <strong>田中 様</strong>
+                <span>製造業・大阪府</span>
+              </div>
+            </div>
+          </div>
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>複合機の選定から設置まで丁寧にサポートしていただきました。スタッフへの操作説明も行っていただき、スムーズに移行できました。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=25" alt="中村様">
+              <div class="voice-info">
+                <strong>中村 様</strong>
+                <span>不動産業・兵庫県</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 高齢者施設紹介業 -->
+      <div class="voice-category fade-in">
+        <div class="voice-category-label">
+          <span class="voice-icon">🏡</span> 高齢者施設紹介業
+        </div>
+        <div class="voice-grid voice-grid-2">
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>母の施設探しで途方に暮れていたところ、親切に相談に乗っていただきました。希望に合った施設を見つけられて本当に感謝しています。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=47" alt="山本様">
+              <div class="voice-info">
+                <strong>山本 様</strong>
+                <span>ご家族・兵庫県</span>
+              </div>
+            </div>
+          </div>
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>父が急に入居が必要になり、急ぎで相談しましたが、すぐに複数の施設を提案してもらえました。短期間で決められてとても助かりました。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=32" alt="木村様">
+              <div class="voice-info">
+                <strong>木村 様</strong>
+                <span>ご家族・大阪府</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- コンサルティング -->
+      <div class="voice-category fade-in">
+        <div class="voice-category-label">
+          <span class="voice-icon">💼</span> コンサルティング
+        </div>
+        <div class="voice-grid voice-grid-2">
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>コンサルティングを通じて業務フローを見直すことができました。具体的な改善提案をいただけたので、すぐに実行に移すことができました。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=15" alt="佐藤様">
+              <div class="voice-info">
+                <strong>佐藤 様</strong>
+                <span>小売業・京都府</span>
+              </div>
+            </div>
+          </div>
+          <div class="voice-card">
+            <span class="quote-mark">"</span>
+            <div class="voice-stars">★★★★★</div>
+            <p>コスト削減の相談をしたところ、社内の無駄を的確に指摘していただき、年間で数百万円のコストカットに成功しました。本当に頼りになります。</p>
+            <div class="voice-author">
+              <img class="voice-avatar" src="https://i.pravatar.cc/96?img=3" alt="高橋様">
+              <div class="voice-info">
+                <strong>高橋 様</strong>
+                <span>製造業・大阪府</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       お問い合わせセクション
+  =========================== -->
+  <section id="contact">
+    <div class="container">
+      <span class="section-label">CONTACT</span>
+      <h2 class="section-title">お問い合わせ</h2>
+      <p class="section-desc">
+        お気軽にご連絡ください。平日9:00〜17:00に対応いたします。
+      </p>
+
+      <div class="contact-wrapper">
+        <!-- 連絡先情報 -->
+        <div class="contact-info fade-in">
+          <h3>お問い合わせ先</h3>
+
+          <!-- 電話番号：大きく強調 -->
+          <div class="tel-highlight">
+            <div class="tel-label">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.4 2 2 0 0 1 3.55 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.73a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              お電話でのお問い合わせ
+            </div>
+            <a href="tel:0671725657" class="tel-number">06-7172-5657</a>
+            <span class="tel-hours">平日 9:00〜17:00 受付</span>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-item-icon">✉️</div>
+            <div class="contact-item-text">
+              <small>メール</small>
+              <strong>matsumoto@essentia-inc.co.jp</strong>
+              <span>24時間受付</span>
+            </div>
+          </div>
+
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div class="contact-item-text">
+              <small>所在地</small>
+              <strong>〒533-0014</strong>
+              <span>大阪市東淀川区豊新3-10-3 402号</span>
+            </div>
+          </div>
+
+          <!-- Google マップ -->
+          <div class="map-wrapper">
+            <iframe
+              src="https://maps.google.com/maps?q=大阪市東淀川区豊新3-10-3&output=embed&hl=ja&z=16"
+              width="100%"
+              height="200"
+              style="border:0;"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Essentia株式会社 地図">
+            </iframe>
+            <a class="map-link" href="https://maps.google.com/maps?q=大阪市東淀川区豊新3-10-3" target="_blank" rel="noopener noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Google マップで開く
+            </a>
+          </div>
+        </div>
+
+        <!-- お問い合わせフォーム -->
+        <div class="contact-form fade-in delay-1">
+          <form action="#" method="POST">
+            <div class="form-group">
+              <label for="name">お名前<span class="required">*</span></label>
+              <input type="text" id="name" name="name" placeholder="例：山田 太郎" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">メールアドレス<span class="required">*</span></label>
+              <input type="email" id="email" name="email" placeholder="例：info@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="tel">電話番号</label>
+              <input type="tel" id="tel" name="tel" placeholder="例：06-0000-0000">
+            </div>
+
+            <div class="form-group">
+              <label for="message">お問い合わせ内容<span class="required">*</span></label>
+              <textarea id="message" name="message" placeholder="ご相談内容をご記入ください" required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">送信する →</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===========================
+       フッター
+  =========================== -->
+  <footer>
+    <a href="#top" class="back-to-top">▲ トップへ戻る</a>
+    <div class="footer-logo"><span>Essentia</span>株式会社</div>
+    <p>© 2025 Essentia株式会社 All Rights Reserved.</p>
+  </footer>
+
+  <!-- ===========================
+       AIチャットウィジェット
+  =========================== -->
+
+  <!-- フローティングボタン -->
+  <button class="chat-toggle-btn" id="chatToggleBtn" aria-label="AIチャットを開く">
+    <!-- チャットアイコン（通常時） -->
+    <svg class="icon-chat" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <!-- 閉じるアイコン（開いているとき） -->
+    <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- チャットパネル -->
+  <div class="chat-widget" id="chatWidget" role="dialog" aria-label="AIチャット">
+    <!-- ヘッダー -->
+    <div class="chat-header">
+      <div class="chat-header-avatar">E</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">Essentia AIアシスタント</div>
+        <div class="chat-header-status">
+          <span class="chat-status-dot"></span>
+          オンライン
+        </div>
+      </div>
+      <button class="chat-close-btn" id="chatCloseBtn" aria-label="チャットを閉じる">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- メッセージエリア -->
+    <div class="chat-messages" id="chatMessages"></div>
+
+    <!-- 入力エリア -->
+    <div class="chat-footer">
+      <textarea
+        class="chat-input"
+        id="chatInput"
+        placeholder="ご質問をどうぞ…"
+        rows="1"
+        aria-label="メッセージを入力"
+      ></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" aria-label="送信">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="js/main.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

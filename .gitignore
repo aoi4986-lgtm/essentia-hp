@@ -1,0 +1,14 @@
+# APIキー・機密ファイル（絶対にGitHubに上げない）
+.env
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# エディタ
+.vscode/
+.idea/
