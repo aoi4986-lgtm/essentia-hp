@@ -338,35 +338,27 @@ const DAYS = ['日','月','火','水','木','金','土'];
 
 function renderCalendar() {
   const title = document.getElementById('calTitle');
-  const grid = document.getElementById('calendarGrid');
+  const calGrid = document.getElementById('calendarGrid');
   title.textContent = `${calYear}年 ${calMonth + 1}月`;
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const firstDay = new Date(calYear, calMonth, 1);
   const lastDay = new Date(calYear, calMonth + 1, 0);
   const startDow = firstDay.getDay();
 
-  // ジャンルごとのイベントマップ
   const eventMap = {};
   customers.forEach(c => {
     if (!c.next_follow_date) return;
-    const d = c.next_follow_date;
-    if (!eventMap[d]) eventMap[d] = [];
-    eventMap[d].push(c);
+    if (!eventMap[c.next_follow_date]) eventMap[c.next_follow_date] = [];
+    eventMap[c.next_follow_date].push(c);
   });
 
-  // ヘッダー
   let html = DAYS.map((d, i) => {
     const cls = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
     return `<div class="cal-header ${cls}">${d}</div>`;
   }).join('');
 
-  // 前月の空白
-  for (let i = 0; i < startDow; i++) {
-    html += `<div class="cal-day empty"></div>`;
-  }
-
-  // 日付セル
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = new Date(calYear, calMonth, d).getDay();
@@ -378,21 +370,16 @@ function renderCalendar() {
         ${esc(c.name)}
       </div>
     `).join('');
+    const colStart = d === 1 ? `style="grid-column-start:${startDow + 1}"` : '';
     html += `
-      <div class="cal-day ${isToday ? 'today' : ''}">
+      <div class="cal-day ${isToday ? 'today' : ''}" ${colStart}>
         <div class="cal-date ${dowCls}">${d}</div>
         ${eventHtml}
       </div>
     `;
   }
 
-  // 後月の空白
-  const endDow = lastDay.getDay();
-  for (let i = endDow + 1; i < 7; i++) {
-    html += `<div class="cal-day empty"></div>`;
-  }
-
-  grid.innerHTML = html;
+  calGrid.innerHTML = html;
 }
 
 document.getElementById('calPrev').addEventListener('click', () => {
