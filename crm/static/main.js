@@ -205,6 +205,102 @@ function closeModal() {
   modalBackdrop.classList.remove('open');
 }
 
+// --- Calendar ---
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+const DAYS = ['日','月','火','水','木','金','土'];
+
+function renderCalendar() {
+  const title = document.getElementById('calTitle');
+  const grid = document.getElementById('calendarGrid');
+  title.textContent = `${calYear}年 ${calMonth + 1}月`;
+
+  const today = new Date().toISOString().split('T')[0];
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay = new Date(calYear, calMonth + 1, 0);
+  const startDow = firstDay.getDay();
+
+  // ジャンルごとのイベントマップ
+  const eventMap = {};
+  customers.forEach(c => {
+    if (!c.next_follow_date) return;
+    const d = c.next_follow_date;
+    if (!eventMap[d]) eventMap[d] = [];
+    eventMap[d].push(c);
+  });
+
+  // ヘッダー
+  let html = DAYS.map((d, i) => {
+    const cls = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
+    return `<div class="cal-header ${cls}">${d}</div>`;
+  }).join('');
+
+  // 前月の空白
+  for (let i = 0; i < startDow; i++) {
+    html += `<div class="cal-day empty"></div>`;
+  }
+
+  // 日付セル
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const isToday = dateStr === today;
+    const dowCls = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
+    const events = eventMap[dateStr] || [];
+    const eventHtml = events.map(c => `
+      <div class="cal-event genre-${esc(c.genre || '')}" onclick="openFollowModal(${c.id})" title="${esc(c.name)}">
+        ${esc(c.name)}
+      </div>
+    `).join('');
+    html += `
+      <div class="cal-day ${isToday ? 'today' : ''}">
+        <div class="cal-date ${dowCls}">${d}</div>
+        ${eventHtml}
+      </div>
+    `;
+  }
+
+  // 後月の空白
+  const endDow = lastDay.getDay();
+  for (let i = endDow + 1; i < 7; i++) {
+    html += `<div class="cal-day empty"></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+document.getElementById('calPrev').addEventListener('click', () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+});
+
+// --- タブ切り替え ---
+const tabList = document.getElementById('tabList');
+const tabCalendar = document.getElementById('tabCalendar');
+const customerGrid = document.getElementById('customerGrid');
+const calendarView = document.getElementById('calendarView');
+
+tabList.addEventListener('click', () => {
+  tabList.classList.add('active');
+  tabCalendar.classList.remove('active');
+  customerGrid.style.display = '';
+  calendarView.style.display = 'none';
+});
+tabCalendar.addEventListener('click', () => {
+  tabCalendar.classList.add('active');
+  tabList.classList.remove('active');
+  customerGrid.style.display = 'none';
+  calendarView.style.display = '';
+  renderCalendar();
+});
+
 // --- Events ---
 document.getElementById('btnAdd').addEventListener('click', openAddPanel);
 document.getElementById('btnClose').addEventListener('click', closePanel);

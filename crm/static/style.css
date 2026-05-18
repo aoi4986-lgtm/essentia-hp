@@ -274,7 +274,96 @@ body {
 .history-item .h-memo { font-size: 0.88rem; color: var(--gray-800); margin-top: 0.2rem; }
 .history-empty { color: var(--gray-400); font-size: 0.88rem; }
 
+/* View tabs */
+.view-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+.view-tab {
+  padding: 0.45rem 1.2rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.15s;
+}
+.view-tab.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+
+/* Calendar */
+.calendar-view { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.2rem; }
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.calendar-title { font-size: 1rem; font-weight: 700; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-header {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  padding: 0.4rem 0;
+}
+.cal-header.sun { color: #e74c3c; }
+.cal-header.sat { color: #3498db; }
+
+.cal-day {
+  min-height: 80px;
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  padding: 0.3rem;
+  background: #fff;
+  font-size: 0.78rem;
+}
+.cal-day.today { background: var(--green-light); border-color: var(--green); }
+.cal-day.empty { background: var(--gray-50); border-color: transparent; }
+.cal-day.other-month { opacity: 0.4; }
+
+.cal-date {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  margin-bottom: 0.2rem;
+}
+.cal-day.today .cal-date { color: var(--green); }
+.cal-date.sun { color: #e74c3c; }
+.cal-date.sat { color: #3498db; }
+
+.cal-event {
+  border-radius: 3px;
+  padding: 0.15rem 0.3rem;
+  margin-bottom: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.cal-event.genre-入居付 { background: #dbeafe; color: #1e40af; }
+.cal-event.genre-OA関係 { background: #d1fae5; color: #065f46; }
+.cal-event.genre-その他 { background: #f3f4f6; color: #374151; }
+.cal-event.genre- { background: #f3f4f6; color: #374151; }
+
 @media (max-width: 600px) {
   .side-panel { width: 100vw; }
   .summary-card { min-width: 120px; }
+  .cal-day { min-height: 55px; }
+  .cal-event { font-size: 0.65rem; }
 }
