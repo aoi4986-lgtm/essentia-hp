@@ -32,11 +32,13 @@ def init_db():
             company TEXT,
             contact TEXT,
             assignee TEXT,
+            genre TEXT,
             next_follow_date DATE,
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS genre TEXT")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS follow_history (
             id SERIAL PRIMARY KEY,
@@ -149,10 +151,10 @@ def add_customer():
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'INSERT INTO customers (name, company, contact, assignee, next_follow_date, notes) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
+        'INSERT INTO customers (name, company, contact, assignee, genre, next_follow_date, notes) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
         (name, sanitize(data.get('company')), sanitize(data.get('contact')),
-         sanitize(data.get('assignee')), validate_date(data.get('next_follow_date')),
-         sanitize(data.get('notes')))
+         sanitize(data.get('assignee')), sanitize(data.get('genre')),
+         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')))
     )
     new_id = cur.fetchone()[0]
     conn.commit()
@@ -171,10 +173,10 @@ def update_customer(cid):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'UPDATE customers SET name=%s, company=%s, contact=%s, assignee=%s, next_follow_date=%s, notes=%s WHERE id=%s',
+        'UPDATE customers SET name=%s, company=%s, contact=%s, assignee=%s, genre=%s, next_follow_date=%s, notes=%s WHERE id=%s',
         (name, sanitize(data.get('company')), sanitize(data.get('contact')),
-         sanitize(data.get('assignee')), validate_date(data.get('next_follow_date')),
-         sanitize(data.get('notes')), cid)
+         sanitize(data.get('assignee')), sanitize(data.get('genre')),
+         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')), cid)
     )
     conn.commit()
     cur.close()

@@ -13,6 +13,7 @@ const fName = document.getElementById('fName');
 const fCompany = document.getElementById('fCompany');
 const fContact = document.getElementById('fContact');
 const fAssignee = document.getElementById('fAssignee');
+const fGenre = document.getElementById('fGenre');
 const fNextDate = document.getElementById('fNextDate');
 const fNotes = document.getElementById('fNotes');
 const modalBackdrop = document.getElementById('modalBackdrop');
@@ -35,10 +36,16 @@ function renderSummary() {
   const overdue = customers.filter(c => c.status === 'overdue').length;
   const soon = customers.filter(c => c.status === 'soon').length;
   const total = customers.length;
+  const nyukyo = customers.filter(c => c.genre === '入居付').length;
+  const oa = customers.filter(c => c.genre === 'OA関係').length;
+  const other = customers.filter(c => c.genre === 'その他').length;
   summary.innerHTML = `
     <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
     <div class="summary-card soon"><span class="label">3日以内</span><span class="value">${soon}</span></div>
     <div class="summary-card"><span class="label">顧客総数</span><span class="value">${total}</span></div>
+    <div class="summary-card"><span class="label">入居付</span><span class="value">${nyukyo}</span></div>
+    <div class="summary-card"><span class="label">OA関係</span><span class="value">${oa}</span></div>
+    <div class="summary-card"><span class="label">その他</span><span class="value">${other}</span></div>
   `;
 }
 
@@ -74,6 +81,7 @@ function cardHTML(c) {
         ${c.company ? `<div class="card-company">${esc(c.company)}</div>` : ''}
       </div>
       <div class="card-meta">
+        ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
         ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
@@ -110,6 +118,7 @@ function openEditPanel(id) {
   fCompany.value = c.company || '';
   fContact.value = c.contact || '';
   fAssignee.value = c.assignee || '';
+  fGenre.value = c.genre || '';
   fNextDate.value = c.next_follow_date || '';
   fNotes.value = c.notes || '';
   showPanel();
@@ -132,6 +141,7 @@ form.addEventListener('submit', async e => {
     company: fCompany.value.trim(),
     contact: fContact.value.trim(),
     assignee: fAssignee.value.trim(),
+    genre: fGenre.value || null,
     next_follow_date: fNextDate.value || null,
     notes: fNotes.value.trim(),
   };
