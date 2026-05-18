@@ -116,6 +116,7 @@ function openAddPanel() {
   editId.value = '';
   form.reset();
   fNextDate.value = '';
+  document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
   showPanel();
 }
 
@@ -413,15 +414,25 @@ tabCalendar.addEventListener('click', () => {
   renderCalendar();
 });
 
-// --- 期待度ボタン ---
-document.querySelectorAll('.btn-expect').forEach(btn => {
+// --- 期待度ボタン（フォローモーダル） ---
+document.querySelectorAll('#modalBackdrop .btn-expect').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.btn-expect').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('#modalBackdrop .btn-expect').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
-    const days = parseInt(btn.dataset.days);
     const d = new Date();
-    d.setDate(d.getDate() + days);
-    followNextDate.value = d.toISOString().split('T')[0];
+    d.setDate(d.getDate() + parseInt(btn.dataset.days));
+    followNextDate.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  });
+});
+
+// --- 期待度ボタン（顧客登録フォーム） ---
+document.querySelectorAll('#formExpectBtns .btn-expect').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const d = new Date();
+    d.setDate(d.getDate() + parseInt(btn.dataset.days));
+    fNextDate.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   });
 });
 
