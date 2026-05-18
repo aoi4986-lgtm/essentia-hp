@@ -3,6 +3,7 @@ let customers = [];
 let currentTab = 'list'; // 'list' | 'ended' | 'calendar'
 let searchQuery = '';
 let currentArea = '';
+let currentGenre = '';
 
 // --- DOM refs ---
 const grid = document.getElementById('customerGrid');
@@ -85,6 +86,10 @@ function renderGrid() {
   let list = customers.filter(c =>
     isEnded ? c.account_status === 'ended' : c.account_status !== 'ended'
   );
+
+  if (currentGenre) {
+    list = list.filter(c => c.genre === currentGenre);
+  }
 
   if (currentArea) {
     list = list.filter(c => c.area === currentArea);
@@ -503,6 +508,16 @@ tabCalendar.addEventListener('click', () => setTab('calendar'));
 document.getElementById('searchInput').addEventListener('input', e => {
   searchQuery = e.target.value.trim();
   if (currentTab !== 'calendar') renderGrid();
+});
+
+// --- ジャンルフィルター ---
+document.querySelectorAll('#genreFilter .area-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#genreFilter .area-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentGenre = btn.dataset.genre;
+    if (currentTab !== 'calendar') renderGrid();
+  });
 });
 
 // --- エリアフィルター ---
