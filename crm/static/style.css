@@ -215,6 +215,23 @@ body {
 .form-group textarea { resize: vertical; }
 .required { color: var(--red); }
 
+.expect-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.btn-expect {
+  padding: 0.4rem 0.9rem;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-expect.high { background: #fff0f0; color: #c0392b; border-color: #e74c3c; }
+.btn-expect.mid  { background: #fff8e1; color: #e07b20; border-color: #f39c12; }
+.btn-expect.low  { background: #e8f5ee; color: #2d8653; border-color: #2d8653; }
+.btn-expect.selected { opacity: 1; filter: brightness(0.88); }
+.btn-expect:not(.selected) { opacity: 0.7; }
+
 .form-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
 
 /* Modal */

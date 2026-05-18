@@ -180,6 +180,7 @@ async function openFollowModal(id) {
   followDate.value = new Date().toISOString().split('T')[0];
   followMemo.value = '';
   followNextDate.value = '';
+  document.querySelectorAll('.btn-expect').forEach(b => b.classList.remove('selected'));
   modalBackdrop.classList.add('open');
   await loadHistory(id);
 }
@@ -423,6 +424,18 @@ tabCalendar.addEventListener('click', () => {
   customerGrid.style.display = 'none';
   calendarView.style.display = '';
   renderCalendar();
+});
+
+// --- 期待度ボタン ---
+document.querySelectorAll('.btn-expect').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn-expect').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const days = parseInt(btn.dataset.days);
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    followNextDate.value = d.toISOString().split('T')[0];
+  });
 });
 
 // --- Events ---
