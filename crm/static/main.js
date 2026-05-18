@@ -41,7 +41,7 @@ function renderSummary() {
   const other = customers.filter(c => c.genre === 'その他').length;
   summary.innerHTML = `
     <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
-    <div class="summary-card soon"><span class="label">3日以内</span><span class="value">${soon}</span></div>
+    <div class="summary-card soon"><span class="label">20日以内</span><span class="value">${soon}</span></div>
     <div class="summary-card"><span class="label">顧客総数</span><span class="value">${total}</span></div>
     <div class="summary-card"><span class="label">入居付</span><span class="value">${nyukyo}</span></div>
     <div class="summary-card"><span class="label">OA関係</span><span class="value">${oa}</span></div>

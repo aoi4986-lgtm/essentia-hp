@@ -120,7 +120,7 @@ def list_customers():
     conn.close()
 
     today = date.today().isoformat()
-    soon = (date.today() + timedelta(days=3)).isoformat()
+    soon = (date.today() + timedelta(days=20)).isoformat()
     result = []
     for r in rows:
         d = dict(r)
