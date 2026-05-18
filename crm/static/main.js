@@ -2,6 +2,7 @@ const API = '';
 let customers = [];
 let currentTab = 'list'; // 'list' | 'ended' | 'calendar'
 let searchQuery = '';
+let currentArea = '';
 
 // --- DOM refs ---
 const grid = document.getElementById('customerGrid');
@@ -16,6 +17,7 @@ const fCompany = document.getElementById('fCompany');
 const fContact = document.getElementById('fContact');
 const fAssignee = document.getElementById('fAssignee');
 const fGenre = document.getElementById('fGenre');
+const fArea = document.getElementById('fArea');
 const fNextDate = document.getElementById('fNextDate');
 const fNotes = document.getElementById('fNotes');
 const modalBackdrop = document.getElementById('modalBackdrop');
@@ -84,6 +86,10 @@ function renderGrid() {
     isEnded ? c.account_status === 'ended' : c.account_status !== 'ended'
   );
 
+  if (currentArea) {
+    list = list.filter(c => c.area === currentArea);
+  }
+
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     list = list.filter(c =>
@@ -132,6 +138,7 @@ function cardHTML(c) {
       </div>
       <div class="card-meta">
         ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
+        ${c.area ? `<span><span class="icon">📍</span>${esc(c.area)}</span>` : ''}
         ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
@@ -159,6 +166,7 @@ function cardHTMLEnded(c) {
       </div>
       <div class="card-meta">
         ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
+        ${c.area ? `<span><span class="icon">📍</span>${esc(c.area)}</span>` : ''}
         ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
@@ -196,6 +204,7 @@ function openEditPanel(id) {
   fContact.value = c.contact || '';
   fAssignee.value = c.assignee || '';
   fGenre.value = c.genre || '';
+  fArea.value = c.area || '';
   fNextDate.value = c.next_follow_date || '';
   fNotes.value = c.notes || '';
   document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
@@ -220,6 +229,7 @@ form.addEventListener('submit', async e => {
     contact: fContact.value.trim(),
     assignee: fAssignee.value.trim(),
     genre: fGenre.value || null,
+    area: fArea.value || null,
     next_follow_date: fNextDate.value || null,
     notes: fNotes.value.trim(),
   };
@@ -493,6 +503,16 @@ tabCalendar.addEventListener('click', () => setTab('calendar'));
 document.getElementById('searchInput').addEventListener('input', e => {
   searchQuery = e.target.value.trim();
   if (currentTab !== 'calendar') renderGrid();
+});
+
+// --- エリアフィルター ---
+document.querySelectorAll('#areaFilter .area-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#areaFilter .area-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentArea = btn.dataset.area;
+    if (currentTab !== 'calendar') renderGrid();
+  });
 });
 
 // --- 期待度ボタン（フォローモーダル） ---

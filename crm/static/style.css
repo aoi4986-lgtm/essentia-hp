@@ -450,6 +450,33 @@ body {
   min-height: 120px;
 }
 
+/* エリアフィルター */
+.area-filter {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.area-btn {
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 20px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.15s;
+}
+.area-btn:hover { background: var(--gray-100); }
+.area-btn.active {
+  background: linear-gradient(135deg, #059669, #0ea5e9);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(5,150,105,0.25);
+}
+
 /* View tabs */
 .view-tabs {
   display: flex;

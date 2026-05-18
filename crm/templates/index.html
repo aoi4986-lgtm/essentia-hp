@@ -28,6 +28,17 @@
       <input type="text" id="searchInput" class="search-bar" placeholder="🔍 顧客名・会社名・担当者で検索...">
     </div>
 
+    <!-- エリアフィルター -->
+    <div class="area-filter" id="areaFilter">
+      <button class="area-btn active" data-area="">すべて</button>
+      <button class="area-btn" data-area="大阪府">大阪府</button>
+      <button class="area-btn" data-area="兵庫県">兵庫県</button>
+      <button class="area-btn" data-area="京都府">京都府</button>
+      <button class="area-btn" data-area="奈良県">奈良県</button>
+      <button class="area-btn" data-area="滋賀県">滋賀県</button>
+      <button class="area-btn" data-area="和歌山県">和歌山県</button>
+    </div>
+
     <!-- タブ切り替え -->
     <div class="view-tabs">
       <button class="view-tab active" id="tabList">一覧</button>
@@ -83,6 +94,18 @@
           <option value="入居付">入居付</option>
           <option value="OA関係">OA関係</option>
           <option value="その他">その他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>エリア</label>
+        <select id="fArea">
+          <option value="">未選択</option>
+          <option value="大阪府">大阪府</option>
+          <option value="兵庫県">兵庫県</option>
+          <option value="京都府">京都府</option>
+          <option value="奈良県">奈良県</option>
+          <option value="滋賀県">滋賀県</option>
+          <option value="和歌山県">和歌山県</option>
         </select>
       </div>
       <div class="form-group">
