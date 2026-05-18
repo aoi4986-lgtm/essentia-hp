@@ -95,9 +95,34 @@ body {
 /* Summary */
 .summary {
   display: flex;
+  align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+}
+.summary-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.summary-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-left: 0.2rem;
+}
+.summary-group-cards {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.summary-divider {
+  width: 1px;
+  background: var(--gray-200);
+  align-self: stretch;
+  margin: 0.2rem 0;
 }
 .summary-card {
   background: #fff;

@@ -55,14 +55,25 @@ function renderSummary() {
   const ended   = customers.filter(c => c.account_status === 'ended').length;
 
   summary.innerHTML = `
-    <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
-    <div class="summary-card urgent"><span class="label">🔥 3日以内</span><span class="value">${u3}</span></div>
-    <div class="summary-card mid"><span class="label">😐 14日以内</span><span class="value">${u14}</span></div>
-    <div class="summary-card low"><span class="label">🧊 30日以内</span><span class="value">${u30}</span></div>
-    <div class="summary-card"><span class="label">顧客総数</span><span class="value">${total}</span></div>
-    <div class="summary-card"><span class="label">入居付</span><span class="value">${nyukyo}</span></div>
-    <div class="summary-card"><span class="label">OA関係</span><span class="value">${oa}</span></div>
-    <div class="summary-card ended-card"><span class="label">終了済み</span><span class="value">${ended}</span></div>
+    <div class="summary-group">
+      <div class="summary-group-label">フォロー状況</div>
+      <div class="summary-group-cards">
+        <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
+        <div class="summary-card urgent"><span class="label">🔥 3日以内</span><span class="value">${u3}</span></div>
+        <div class="summary-card mid"><span class="label">😐 14日以内</span><span class="value">${u14}</span></div>
+        <div class="summary-card low"><span class="label">🧊 30日以内</span><span class="value">${u30}</span></div>
+      </div>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-group">
+      <div class="summary-group-label">顧客内訳</div>
+      <div class="summary-group-cards">
+        <div class="summary-card"><span class="label">総数</span><span class="value">${total}</span></div>
+        <div class="summary-card"><span class="label">入居付</span><span class="value">${nyukyo}</span></div>
+        <div class="summary-card"><span class="label">OA関係</span><span class="value">${oa}</span></div>
+        <div class="summary-card ended-card"><span class="label">終了済み</span><span class="value">${ended}</span></div>
+      </div>
+    </div>
   `;
 }
 
