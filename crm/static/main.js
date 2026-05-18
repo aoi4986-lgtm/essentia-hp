@@ -94,9 +94,9 @@ function cardHTML(c) {
       <span class="follow-badge ${c.status}">${badgeLabel(c.status, c.next_follow_date || '')}</span>
       ${c.notes ? `<div style="font-size:0.82rem;color:#4b5563">${esc(c.notes)}</div>` : ''}
       <div class="card-actions">
-        <button class="btn btn-primary btn-sm btn-follow" data-id="${c.id}">フォロー記録</button>
-        <button class="btn btn-ghost btn-sm btn-edit" data-id="${c.id}">編集</button>
-        <button class="btn btn-ghost btn-sm btn-delete" data-id="${c.id}">削除</button>
+        <button class="btn-follow-card btn-follow" data-id="${c.id}">フォロー記録</button>
+        <button class="btn btn-sm btn-edit" style="background:var(--gray-100);color:var(--gray-600);border:none" data-id="${c.id}">編集</button>
+        <button class="btn btn-sm btn-delete" style="background:var(--gray-100);color:var(--gray-400);border:none" data-id="${c.id}">削除</button>
       </div>
       <div class="card-actions">
         <button class="btn btn-ai btn-sm btn-ai-chat" data-id="${c.id}">💬 AIと相談</button>
