@@ -517,6 +517,87 @@ body {
 .cal-event.genre-その他 { background: #f3f4f6; color: #374151; }
 .cal-event.genre- { background: #f3f4f6; color: #374151; }
 
+/* 検索バー */
+.search-bar-wrap { margin-bottom: 0.8rem; }
+.search-bar {
+  width: 100%;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--gray-800);
+  background: #fff;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-bar:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+}
+
+/* サマリーカード追加スタイル */
+.summary-card.urgent { border-top-color: #ef4444; }
+.summary-card.urgent .value { color: #ef4444; }
+.summary-card.mid { border-top-color: var(--orange); }
+.summary-card.mid .value { color: var(--orange); }
+.summary-card.low { border-top-color: #3b82f6; }
+.summary-card.low .value { color: #3b82f6; }
+.summary-card.ended-card { border-top-color: var(--gray-400); }
+.summary-card.ended-card .value { color: var(--gray-400); }
+
+/* 終了ボタン */
+.btn-end {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-end:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+
+/* 終了済みカード */
+.customer-card.ended {
+  border-top-color: var(--gray-200);
+  opacity: 0.75;
+  background: var(--gray-50);
+}
+.customer-card.ended .card-name { color: var(--gray-600); }
+.follow-badge.ended-badge { background: var(--gray-200); color: var(--gray-600); }
+
+/* 再開ボタン */
+.btn-reopen {
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 0.32rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btn-reopen:hover { background: #d1fae5; }
+
+/* 期待度履歴バッジ */
+.expect-history-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  margin-left: 0.4rem;
+}
+
 /* 期待度ボタン */
 .expect-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .btn-expect {

@@ -23,9 +23,15 @@
     <!-- サマリーバー -->
     <div class="summary" id="summary"></div>
 
+    <!-- 検索バー -->
+    <div class="search-bar-wrap">
+      <input type="text" id="searchInput" class="search-bar" placeholder="🔍 顧客名・会社名・担当者で検索...">
+    </div>
+
     <!-- タブ切り替え -->
     <div class="view-tabs">
       <button class="view-tab active" id="tabList">一覧</button>
+      <button class="view-tab" id="tabEnded">終了済み</button>
       <button class="view-tab" id="tabCalendar">カレンダー</button>
     </div>
 
@@ -125,9 +131,9 @@
           <div class="form-group">
             <label>期待度</label>
             <div class="expect-btns">
-              <button type="button" class="btn-expect high" data-days="3">🔥 高い（3日後）</button>
-              <button type="button" class="btn-expect mid" data-days="14">😐 普通（14日後）</button>
-              <button type="button" class="btn-expect low" data-days="30">🧊 低い（30日後）</button>
+              <button type="button" class="btn-expect high" data-days="3" data-level="high">🔥 高い（3日後）</button>
+              <button type="button" class="btn-expect mid" data-days="14" data-level="mid">😐 普通（14日後）</button>
+              <button type="button" class="btn-expect low" data-days="30" data-level="low">🧊 低い（30日後）</button>
             </div>
             <p class="expect-hint">選ぶと次回フォロー日が自動でセットされます。高い＝3日・普通＝14日・低い＝30日</p>
           </div>
@@ -135,7 +141,10 @@
             <label>次回フォロー日</label>
             <input type="date" id="followNextDate">
           </div>
-          <button class="btn btn-primary" id="btnFollowSave">記録する</button>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btnFollowSave">記録する</button>
+            <button class="btn btn-end" id="btnFollowEnd">終了</button>
+          </div>
         </section>
         <section class="history-section">
           <h4>フォロー履歴</h4>

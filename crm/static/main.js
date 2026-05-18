@@ -1,5 +1,7 @@
 const API = '';
 let customers = [];
+let currentTab = 'list'; // 'list' | 'ended' | 'calendar'
+let searchQuery = '';
 
 // --- DOM refs ---
 const grid = document.getElementById('customerGrid');
@@ -32,44 +34,75 @@ async function loadCustomers() {
   renderGrid();
 }
 
+// --- Summary ---
 function renderSummary() {
-  const overdue = customers.filter(c => c.status === 'overdue').length;
-  const soon = customers.filter(c => c.status === 'soon').length;
-  const total = customers.length;
-  const nyukyo = customers.filter(c => c.genre === '入居付').length;
-  const oa = customers.filter(c => c.genre === 'OA関係').length;
-  const other = customers.filter(c => c.genre === 'その他').length;
+  const active = customers.filter(c => c.account_status !== 'ended');
+  const now = new Date();
+  const d3  = new Date(now); d3.setDate(d3.getDate() + 3);
+  const d14 = new Date(now); d14.setDate(d14.getDate() + 14);
+  const d30 = new Date(now); d30.setDate(d30.getDate() + 30);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const today = fmt(now), s3 = fmt(d3), s14 = fmt(d14), s30 = fmt(d30);
+
+  const overdue = active.filter(c => c.next_follow_date && c.next_follow_date < today).length;
+  const u3  = active.filter(c => c.next_follow_date && c.next_follow_date >= today && c.next_follow_date <= s3).length;
+  const u14 = active.filter(c => c.next_follow_date && c.next_follow_date > s3  && c.next_follow_date <= s14).length;
+  const u30 = active.filter(c => c.next_follow_date && c.next_follow_date > s14 && c.next_follow_date <= s30).length;
+  const total   = active.length;
+  const nyukyo  = active.filter(c => c.genre === '入居付').length;
+  const oa      = active.filter(c => c.genre === 'OA関係').length;
+  const other   = active.filter(c => c.genre === 'その他').length;
+  const ended   = customers.filter(c => c.account_status === 'ended').length;
+
   summary.innerHTML = `
     <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
-    <div class="summary-card soon"><span class="label">20日以内</span><span class="value">${soon}</span></div>
+    <div class="summary-card urgent"><span class="label">🔥 3日以内</span><span class="value">${u3}</span></div>
+    <div class="summary-card mid"><span class="label">😐 14日以内</span><span class="value">${u14}</span></div>
+    <div class="summary-card low"><span class="label">🧊 30日以内</span><span class="value">${u30}</span></div>
     <div class="summary-card"><span class="label">顧客総数</span><span class="value">${total}</span></div>
     <div class="summary-card"><span class="label">入居付</span><span class="value">${nyukyo}</span></div>
     <div class="summary-card"><span class="label">OA関係</span><span class="value">${oa}</span></div>
-    <div class="summary-card"><span class="label">その他</span><span class="value">${other}</span></div>
+    <div class="summary-card ended-card"><span class="label">終了済み</span><span class="value">${ended}</span></div>
   `;
 }
 
+// --- Grid ---
 function renderGrid() {
-  if (customers.length === 0) {
-    grid.innerHTML = '<div class="empty">顧客がいません。「＋ 顧客を追加」から登録してください。</div>';
+  const isEnded = currentTab === 'ended';
+  let list = customers.filter(c =>
+    isEnded ? c.account_status === 'ended' : c.account_status !== 'ended'
+  );
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(c =>
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.company || '').toLowerCase().includes(q) ||
+      (c.assignee || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (list.length === 0) {
+    grid.innerHTML = isEnded
+      ? '<div class="empty">終了済みの顧客はいません。</div>'
+      : '<div class="empty">顧客がいません。「＋ 顧客を追加」から登録してください。</div>';
     return;
   }
-  grid.innerHTML = customers.map(c => cardHTML(c)).join('');
-  grid.querySelectorAll('.btn-follow').forEach(btn => {
-    btn.addEventListener('click', () => openFollowModal(btn.dataset.id));
-  });
-  grid.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditPanel(btn.dataset.id));
-  });
-  grid.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', () => deleteCustomer(btn.dataset.id));
-  });
-  grid.querySelectorAll('.btn-ai-chat').forEach(btn => {
-    btn.addEventListener('click', () => openChatModal(btn.dataset.id));
-  });
-  grid.querySelectorAll('.btn-ai-email').forEach(btn => {
-    btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'email'));
-  });
+
+  grid.innerHTML = list.map(c => isEnded ? cardHTMLEnded(c) : cardHTML(c)).join('');
+
+  grid.querySelectorAll('.btn-follow').forEach(btn =>
+    btn.addEventListener('click', () => openFollowModal(btn.dataset.id)));
+  grid.querySelectorAll('.btn-edit').forEach(btn =>
+    btn.addEventListener('click', () => openEditPanel(btn.dataset.id)));
+  grid.querySelectorAll('.btn-delete').forEach(btn =>
+    btn.addEventListener('click', () => deleteCustomer(btn.dataset.id)));
+  grid.querySelectorAll('.btn-ai-chat').forEach(btn =>
+    btn.addEventListener('click', () => openChatModal(btn.dataset.id)));
+  grid.querySelectorAll('.btn-ai-email').forEach(btn =>
+    btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'email')));
+  grid.querySelectorAll('.btn-reopen').forEach(btn =>
+    btn.addEventListener('click', () => reopenCustomer(btn.dataset.id)));
 }
 
 function badgeLabel(status, date) {
@@ -106,6 +139,28 @@ function cardHTML(c) {
   `;
 }
 
+function cardHTMLEnded(c) {
+  return `
+    <div class="customer-card ended">
+      <div>
+        <div class="card-name">${esc(c.name)}</div>
+        ${c.company ? `<div class="card-company">${esc(c.company)}</div>` : ''}
+      </div>
+      <div class="card-meta">
+        ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
+        ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
+        ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
+      </div>
+      <span class="follow-badge ended-badge">✓ フォロー終了</span>
+      ${c.notes ? `<div style="font-size:0.82rem;color:#94a3b8">${esc(c.notes)}</div>` : ''}
+      <div class="card-actions">
+        <button class="btn btn-reopen btn-sm btn-reopen" data-id="${c.id}">🔄 再開</button>
+        <button class="btn btn-sm btn-delete" style="background:var(--gray-100);color:var(--gray-400);border:none" data-id="${c.id}">削除</button>
+      </div>
+    </div>
+  `;
+}
+
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -132,6 +187,7 @@ function openEditPanel(id) {
   fGenre.value = c.genre || '';
   fNextDate.value = c.next_follow_date || '';
   fNotes.value = c.notes || '';
+  document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
   showPanel();
 }
 
@@ -172,18 +228,39 @@ async function deleteCustomer(id) {
   loadCustomers();
 }
 
+async function reopenCustomer(id) {
+  const c = customers.find(c => String(c.id) === String(id));
+  if (!confirm(`「${c?.name}」を再開しますか？`)) return;
+  await fetch(`${API}/customers/${id}/reopen`, { method: 'POST' });
+  loadCustomers();
+}
+
 // --- Follow Modal ---
+function getSelectedExpectation() {
+  const sel = document.querySelector('#modalBackdrop .btn-expect.selected');
+  return sel ? sel.dataset.level : null;
+}
+
 async function openFollowModal(id) {
   const c = customers.find(c => String(c.id) === String(id));
   if (!c) return;
   modalCustomerName.textContent = `${c.name}${c.company ? ' / ' + c.company : ''}`;
   followCustomerId.value = id;
-  followDate.value = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  followDate.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   followMemo.value = '';
   followNextDate.value = '';
-  document.querySelectorAll('.btn-expect').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#modalBackdrop .btn-expect').forEach(b => b.classList.remove('selected'));
   modalBackdrop.classList.add('open');
   await loadHistory(id);
+}
+
+function expectLabel(exp) {
+  if (exp === 'high') return '🔥 高い';
+  if (exp === 'mid')  return '😐 普通';
+  if (exp === 'low')  return '🧊 低い';
+  if (exp === 'ended') return '⏹ 終了';
+  return '';
 }
 
 async function loadHistory(id) {
@@ -193,12 +270,15 @@ async function loadHistory(id) {
     historyList.innerHTML = '<div class="history-empty">履歴はありません</div>';
     return;
   }
-  historyList.innerHTML = history.map(h => `
-    <div class="history-item">
-      <div class="h-date">${esc(h.date)}</div>
-      <div class="h-memo">${esc(h.memo || '（メモなし）')}</div>
-    </div>
-  `).join('');
+  historyList.innerHTML = history.map(h => {
+    const badge = h.expectation ? `<span class="expect-history-badge">${expectLabel(h.expectation)}</span>` : '';
+    return `
+      <div class="history-item">
+        <div class="h-date">${esc(h.date)} ${badge}</div>
+        <div class="h-memo">${esc(h.memo || '（メモなし）')}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 document.getElementById('btnFollowSave').addEventListener('click', async () => {
@@ -207,8 +287,18 @@ document.getElementById('btnFollowSave').addEventListener('click', async () => {
     date: followDate.value,
     memo: followMemo.value.trim(),
     next_follow_date: followNextDate.value || null,
+    expectation: getSelectedExpectation(),
   };
   await fetch(`${API}/customers/${id}/follow`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  closeModal();
+  loadCustomers();
+});
+
+document.getElementById('btnFollowEnd').addEventListener('click', async () => {
+  const id = followCustomerId.value;
+  const c = customers.find(c => String(c.id) === String(id));
+  if (!confirm(`「${c?.name}」のフォローを終了しますか？\n終了済みタブから再開できます。`)) return;
+  await fetch(`${API}/customers/${id}/end`, { method: 'POST' });
   closeModal();
   loadCustomers();
 });
@@ -231,7 +321,6 @@ function openChatModal(id) {
   chatMessages.innerHTML = '';
   document.getElementById('chatModalTitle').textContent = `💬 AIと相談 — ${c?.name}`;
   chatModalBackdrop.classList.add('open');
-  // 最初のAIメッセージを自動生成
   sendChat('');
 }
 
@@ -249,20 +338,16 @@ async function sendChat(userText) {
     appendBubble('user', userText);
     chatHistory.push({ role: 'user', content: userText });
   } else {
-    // 初回は空メッセージでAIに先に話させる
     chatHistory.push({ role: 'user', content: 'この顧客について一緒に考えたいです。状況を整理して、何を相談すべか教えてください。' });
   }
-
   const aiBubble = appendBubble('ai', '');
   aiBubble.classList.add('typing');
   let fullText = '';
-
   const res = await fetch(`${API}/customers/${chatCustomerId}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: chatHistory })
   });
-
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   while (true) {
@@ -305,9 +390,7 @@ const aiResult = document.getElementById('aiResult');
 
 async function openAiModal(id, type) {
   const c = customers.find(c => String(c.id) === String(id));
-  aiModalTitle.textContent = type === 'suggest'
-    ? `✨ AI提案 — ${c?.name}`
-    : `✉ メール作成 — ${c?.name}`;
+  aiModalTitle.textContent = type === 'suggest' ? `✨ AI提案 — ${c?.name}` : `✉ メール作成 — ${c?.name}`;
   aiResult.textContent = '生成中...';
   aiModalBackdrop.classList.add('open');
   try {
@@ -319,12 +402,8 @@ async function openAiModal(id, type) {
   }
 }
 
-document.getElementById('btnAiModalClose').addEventListener('click', () => {
-  aiModalBackdrop.classList.remove('open');
-});
-aiModalBackdrop.addEventListener('click', e => {
-  if (e.target === aiModalBackdrop) aiModalBackdrop.classList.remove('open');
-});
+document.getElementById('btnAiModalClose').addEventListener('click', () => { aiModalBackdrop.classList.remove('open'); });
+aiModalBackdrop.addEventListener('click', e => { if (e.target === aiModalBackdrop) aiModalBackdrop.classList.remove('open'); });
 document.getElementById('btnCopyAi').addEventListener('click', () => {
   navigator.clipboard.writeText(aiResult.textContent);
   document.getElementById('btnCopyAi').textContent = 'コピーしました！';
@@ -334,32 +413,27 @@ document.getElementById('btnCopyAi').addEventListener('click', () => {
 // --- Calendar ---
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
-
 const DAYS = ['日','月','火','水','木','金','土'];
 
 function renderCalendar() {
   const title = document.getElementById('calTitle');
   const calGrid = document.getElementById('calendarGrid');
   title.textContent = `${calYear}年 ${calMonth + 1}月`;
-
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const firstDay = new Date(calYear, calMonth, 1);
   const lastDay = new Date(calYear, calMonth + 1, 0);
   const startDow = firstDay.getDay();
-
   const eventMap = {};
-  customers.forEach(c => {
+  customers.filter(c => c.account_status !== 'ended').forEach(c => {
     if (!c.next_follow_date) return;
     if (!eventMap[c.next_follow_date]) eventMap[c.next_follow_date] = [];
     eventMap[c.next_follow_date].push(c);
   });
-
   let html = DAYS.map((d, i) => {
     const cls = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
     return `<div class="cal-header ${cls}">${d}</div>`;
   }).join('');
-
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = new Date(calYear, calMonth, d).getDay();
@@ -367,51 +441,47 @@ function renderCalendar() {
     const dowCls = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
     const events = eventMap[dateStr] || [];
     const eventHtml = events.map(c => `
-      <div class="cal-event genre-${esc(c.genre || '')}" onclick="openFollowModal(${c.id})" title="${esc(c.name)}">
-        ${esc(c.name)}
-      </div>
+      <div class="cal-event genre-${esc(c.genre || '')}" onclick="openFollowModal(${c.id})" title="${esc(c.name)}">${esc(c.name)}</div>
     `).join('');
     const colStart = d === 1 ? `style="grid-column-start:${startDow + 1}"` : '';
-    html += `
-      <div class="cal-day ${isToday ? 'today' : ''}" ${colStart}>
-        <div class="cal-date ${dowCls}">${d}</div>
-        ${eventHtml}
-      </div>
-    `;
+    html += `<div class="cal-day ${isToday ? 'today' : ''}" ${colStart}><div class="cal-date ${dowCls}">${d}</div>${eventHtml}</div>`;
   }
-
   calGrid.innerHTML = html;
 }
 
 document.getElementById('calPrev').addEventListener('click', () => {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar();
 });
 document.getElementById('calNext').addEventListener('click', () => {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar();
 });
 
 // --- タブ切り替え ---
-const tabList = document.getElementById('tabList');
+const tabList     = document.getElementById('tabList');
+const tabEnded    = document.getElementById('tabEnded');
 const tabCalendar = document.getElementById('tabCalendar');
 const customerGrid = document.getElementById('customerGrid');
 const calendarView = document.getElementById('calendarView');
 
-tabList.addEventListener('click', () => {
-  tabList.classList.add('active');
-  tabCalendar.classList.remove('active');
-  customerGrid.style.display = '';
-  calendarView.style.display = 'none';
-});
-tabCalendar.addEventListener('click', () => {
-  tabCalendar.classList.add('active');
-  tabList.classList.remove('active');
-  customerGrid.style.display = 'none';
-  calendarView.style.display = '';
-  renderCalendar();
+function setTab(tab) {
+  currentTab = tab;
+  tabList.classList.toggle('active', tab === 'list');
+  tabEnded.classList.toggle('active', tab === 'ended');
+  tabCalendar.classList.toggle('active', tab === 'calendar');
+  customerGrid.style.display = tab === 'calendar' ? 'none' : '';
+  calendarView.style.display = tab === 'calendar' ? '' : 'none';
+  if (tab === 'calendar') renderCalendar();
+  else renderGrid();
+}
+
+tabList.addEventListener('click', () => setTab('list'));
+tabEnded.addEventListener('click', () => setTab('ended'));
+tabCalendar.addEventListener('click', () => setTab('calendar'));
+
+// --- 検索バー ---
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  if (currentTab !== 'calendar') renderGrid();
 });
 
 // --- 期待度ボタン（フォローモーダル） ---

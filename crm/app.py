@@ -42,15 +42,18 @@ def init_db():
         )
     ''')
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS genre TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS follow_history (
             id SERIAL PRIMARY KEY,
             customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
             date DATE NOT NULL,
             memo TEXT,
+            expectation TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute("ALTER TABLE follow_history ADD COLUMN IF NOT EXISTS expectation TEXT")
     conn.commit()
     cur.close()
     conn.close()
@@ -123,10 +126,11 @@ def list_customers():
     conn.close()
 
     today = date.today().isoformat()
-    soon = (date.today() + timedelta(days=20)).isoformat()
+    soon = (date.today() + timedelta(days=30)).isoformat()
     result = []
     for r in rows:
         d = dict(r)
+        account_status = d.get('status') or 'active'
         if d.get('next_follow_date'):
             nfd = d['next_follow_date'].isoformat()
             d['next_follow_date'] = nfd
@@ -138,6 +142,7 @@ def list_customers():
                 d['status'] = 'ok'
         else:
             d['status'] = 'none'
+        d['account_status'] = account_status
         if d.get('created_at'):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
@@ -207,8 +212,8 @@ def add_follow(cid):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'INSERT INTO follow_history (customer_id, date, memo) VALUES (%s, %s, %s)',
-        (cid, follow_date, sanitize(data.get('memo')))
+        'INSERT INTO follow_history (customer_id, date, memo, expectation) VALUES (%s, %s, %s, %s)',
+        (cid, follow_date, sanitize(data.get('memo')), sanitize(data.get('expectation')))
     )
     next_date = validate_date(data.get('next_follow_date'))
     if next_date:
@@ -216,6 +221,34 @@ def add_follow(cid):
             'UPDATE customers SET next_follow_date=%s WHERE id=%s',
             (next_date, cid)
         )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/customers/<int:cid>/end', methods=['POST'])
+@login_required
+def end_customer(cid):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE customers SET status='ended', next_follow_date=NULL WHERE id=%s", (cid,))
+    cur.execute(
+        'INSERT INTO follow_history (customer_id, date, memo, expectation) VALUES (%s, %s, %s, %s)',
+        (cid, date.today().isoformat(), 'フォロー終了', 'ended')
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/customers/<int:cid>/reopen', methods=['POST'])
+@login_required
+def reopen_customer(cid):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE customers SET status='active' WHERE id=%s", (cid,))
     conn.commit()
     cur.close()
     conn.close()
