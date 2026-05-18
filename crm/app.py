@@ -245,6 +245,15 @@ def get_history(cid):
     return jsonify(result)
 
 
+CHAT_SYSTEM = """あなたは営業担当者の優秀なパートナーです。顧客情報とフォロー履歴をもとに、担当者と一緒に次のアクションを考えます。
+以下のルールを守ってください：
+- 一方的に提案するのではなく、担当者に質問しながら一緒に考える
+- 返答は簡潔に（3〜5文以内）
+- 具体的で実践的なアドバイスをする
+- 日本語で話す
+- 最初の返答では顧客の状況を簡単に整理して、何を相談したいか聞く"""
+
+
 def build_customer_context(cid):
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -262,6 +271,36 @@ def build_customer_context(cid):
         for h in history:
             ctx += f"- {h['date']}: {h['memo'] or 'メモなし'}\n"
     return c, ctx
+
+
+@app.route('/customers/<int:cid>/chat', methods=['POST'])
+@login_required
+def ai_chat(cid):
+    if not ai_client:
+        return jsonify({'error': 'AI機能が設定されていません'}), 500
+    c, ctx = build_customer_context(cid)
+    if not c:
+        return jsonify({'error': '顧客が見つかりません'}), 404
+
+    data = request.json or {}
+    messages = data.get('messages', [])
+
+    system = f"{CHAT_SYSTEM}\n\n【顧客情報】\n{ctx}"
+
+    from flask import Response, stream_with_context
+    def generate():
+        with ai_client.messages.stream(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=512,
+            system=system,
+            messages=messages
+        ) as stream:
+            for text in stream.text_stream:
+                yield f"data: {text}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
 @app.route('/customers/<int:cid>/suggest', methods=['POST'])

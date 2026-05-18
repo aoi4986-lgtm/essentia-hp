@@ -127,6 +127,21 @@
     </div>
   </div>
 
+  <!-- AIチャットモーダル -->
+  <div class="modal-backdrop" id="chatModalBackdrop">
+    <div class="modal chat-modal" id="chatModal">
+      <div class="modal-header">
+        <h3 id="chatModalTitle">💬 AIと相談</h3>
+        <button class="btn-close" id="btnChatModalClose">×</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <textarea id="chatInput" placeholder="状況を教えてください..." rows="2"></textarea>
+        <button class="btn btn-primary" id="btnChatSend">送信</button>
+      </div>
+    </div>
+  </div>
+
   <!-- AI モーダル -->
   <div class="modal-backdrop" id="aiModalBackdrop">
     <div class="modal" id="aiModal">

@@ -64,8 +64,8 @@ function renderGrid() {
   grid.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', () => deleteCustomer(btn.dataset.id));
   });
-  grid.querySelectorAll('.btn-ai-suggest').forEach(btn => {
-    btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'suggest'));
+  grid.querySelectorAll('.btn-ai-chat').forEach(btn => {
+    btn.addEventListener('click', () => openChatModal(btn.dataset.id));
   });
   grid.querySelectorAll('.btn-ai-email').forEach(btn => {
     btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'email'));
@@ -99,7 +99,7 @@ function cardHTML(c) {
         <button class="btn btn-ghost btn-sm btn-delete" data-id="${c.id}">削除</button>
       </div>
       <div class="card-actions">
-        <button class="btn btn-ai btn-sm btn-ai-suggest" data-id="${c.id}">✨ AI提案</button>
+        <button class="btn btn-ai btn-sm btn-ai-chat" data-id="${c.id}">💬 AIと相談</button>
         <button class="btn btn-ai btn-sm btn-ai-email" data-id="${c.id}">✉ メール作成</button>
       </div>
     </div>
@@ -214,6 +214,87 @@ document.getElementById('btnFollowSave').addEventListener('click', async () => {
 function closeModal() {
   modalBackdrop.classList.remove('open');
 }
+
+// --- AI Chat ---
+const chatModalBackdrop = document.getElementById('chatModalBackdrop');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+let chatHistory = [];
+let chatCustomerId = null;
+
+function openChatModal(id) {
+  const c = customers.find(c => String(c.id) === String(id));
+  chatCustomerId = id;
+  chatHistory = [];
+  chatMessages.innerHTML = '';
+  document.getElementById('chatModalTitle').textContent = `💬 AIと相談 — ${c?.name}`;
+  chatModalBackdrop.classList.add('open');
+  // 最初のAIメッセージを自動生成
+  sendChat('');
+}
+
+function appendBubble(role, text) {
+  const div = document.createElement('div');
+  div.className = `chat-bubble ${role}`;
+  div.textContent = text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+async function sendChat(userText) {
+  if (userText) {
+    appendBubble('user', userText);
+    chatHistory.push({ role: 'user', content: userText });
+  } else {
+    // 初回は空メッセージでAIに先に話させる
+    chatHistory.push({ role: 'user', content: 'この顧客について一緒に考えたいです。状況を整理して、何を相談すべか教えてください。' });
+  }
+
+  const aiBubble = appendBubble('ai', '');
+  aiBubble.classList.add('typing');
+  let fullText = '';
+
+  const res = await fetch(`${API}/customers/${chatCustomerId}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: chatHistory })
+  });
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    for (const line of chunk.split('\n')) {
+      if (!line.startsWith('data: ')) continue;
+      const text = line.slice(6);
+      if (text === '[DONE]') break;
+      fullText += text;
+      aiBubble.textContent = fullText;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  }
+  aiBubble.classList.remove('typing');
+  chatHistory.push({ role: 'assistant', content: fullText });
+}
+
+document.getElementById('btnChatSend').addEventListener('click', () => {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = '';
+  sendChat(text);
+});
+chatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btnChatSend').click(); }
+});
+document.getElementById('btnChatModalClose').addEventListener('click', () => {
+  chatModalBackdrop.classList.remove('open');
+});
+chatModalBackdrop.addEventListener('click', e => {
+  if (e.target === chatModalBackdrop) chatModalBackdrop.classList.remove('open');
+});
 
 // --- AI Modal ---
 const aiModalBackdrop = document.getElementById('aiModalBackdrop');
