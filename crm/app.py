@@ -2,6 +2,7 @@ import os
 import secrets
 import psycopg2
 import psycopg2.extras
+import anthropic
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from datetime import date, timedelta
 from functools import wraps
@@ -11,6 +12,8 @@ app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 APP_PASSWORD = os.environ.get('APP_PASSWORD', 'changeme')
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+ai_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
 MAX_TEXT_LEN = 500
 
@@ -240,6 +243,63 @@ def get_history(cid):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
     return jsonify(result)
+
+
+def build_customer_context(cid):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM customers WHERE id=%s', (cid,))
+    c = cur.fetchone()
+    cur.execute('SELECT * FROM follow_history WHERE customer_id=%s ORDER BY date DESC LIMIT 5', (cid,))
+    history = cur.fetchall()
+    cur.close()
+    conn.close()
+    if not c:
+        return None, None
+    ctx = f"顧客名: {c['name']}\n会社名: {c['company'] or '未登録'}\n連絡先: {c['contact'] or '未登録'}\n担当者: {c['assignee'] or '未登録'}\nジャンル: {c['genre'] or '未登録'}\n次回フォロー日: {c['next_follow_date'] or '未設定'}\nメモ: {c['notes'] or 'なし'}\n"
+    if history:
+        ctx += "\n【フォロー履歴（直近5件）】\n"
+        for h in history:
+            ctx += f"- {h['date']}: {h['memo'] or 'メモなし'}\n"
+    return c, ctx
+
+
+@app.route('/customers/<int:cid>/suggest', methods=['POST'])
+@login_required
+def ai_suggest(cid):
+    if not ai_client:
+        return jsonify({'error': 'AI機能が設定されていません'}), 500
+    c, ctx = build_customer_context(cid)
+    if not c:
+        return jsonify({'error': '顧客が見つかりません'}), 404
+    msg = ai_client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=600,
+        messages=[{
+            'role': 'user',
+            'content': f"以下の顧客情報とフォロー履歴をもとに、次回フォロー時に話すべき内容を3〜5点、箇条書きで提案してください。\n\n{ctx}"
+        }]
+    )
+    return jsonify({'result': msg.content[0].text})
+
+
+@app.route('/customers/<int:cid>/email', methods=['POST'])
+@login_required
+def ai_email(cid):
+    if not ai_client:
+        return jsonify({'error': 'AI機能が設定されていません'}), 500
+    c, ctx = build_customer_context(cid)
+    if not c:
+        return jsonify({'error': '顧客が見つかりません'}), 404
+    msg = ai_client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=800,
+        messages=[{
+            'role': 'user',
+            'content': f"以下の顧客情報とフォロー履歴をもとに、丁寧で自然な日本語のフォローメール文を作成してください。件名と本文を含めてください。\n\n{ctx}"
+        }]
+    )
+    return jsonify({'result': msg.content[0].text})
 
 
 init_db()

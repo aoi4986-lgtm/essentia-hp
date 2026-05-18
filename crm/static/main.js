@@ -64,6 +64,12 @@ function renderGrid() {
   grid.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', () => deleteCustomer(btn.dataset.id));
   });
+  grid.querySelectorAll('.btn-ai-suggest').forEach(btn => {
+    btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'suggest'));
+  });
+  grid.querySelectorAll('.btn-ai-email').forEach(btn => {
+    btn.addEventListener('click', () => openAiModal(btn.dataset.id, 'email'));
+  });
 }
 
 function badgeLabel(status, date) {
@@ -91,6 +97,10 @@ function cardHTML(c) {
         <button class="btn btn-primary btn-sm btn-follow" data-id="${c.id}">フォロー記録</button>
         <button class="btn btn-ghost btn-sm btn-edit" data-id="${c.id}">編集</button>
         <button class="btn btn-ghost btn-sm btn-delete" data-id="${c.id}">削除</button>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ai btn-sm btn-ai-suggest" data-id="${c.id}">✨ AI提案</button>
+        <button class="btn btn-ai btn-sm btn-ai-email" data-id="${c.id}">✉ メール作成</button>
       </div>
     </div>
   `;
@@ -204,6 +214,39 @@ document.getElementById('btnFollowSave').addEventListener('click', async () => {
 function closeModal() {
   modalBackdrop.classList.remove('open');
 }
+
+// --- AI Modal ---
+const aiModalBackdrop = document.getElementById('aiModalBackdrop');
+const aiModalTitle = document.getElementById('aiModalTitle');
+const aiResult = document.getElementById('aiResult');
+
+async function openAiModal(id, type) {
+  const c = customers.find(c => String(c.id) === String(id));
+  aiModalTitle.textContent = type === 'suggest'
+    ? `✨ AI提案 — ${c?.name}`
+    : `✉ メール作成 — ${c?.name}`;
+  aiResult.textContent = '生成中...';
+  aiModalBackdrop.classList.add('open');
+  try {
+    const res = await fetch(`${API}/customers/${id}/${type}`, { method: 'POST' });
+    const data = await res.json();
+    aiResult.textContent = data.result || data.error || 'エラーが発生しました';
+  } catch {
+    aiResult.textContent = 'エラーが発生しました';
+  }
+}
+
+document.getElementById('btnAiModalClose').addEventListener('click', () => {
+  aiModalBackdrop.classList.remove('open');
+});
+aiModalBackdrop.addEventListener('click', e => {
+  if (e.target === aiModalBackdrop) aiModalBackdrop.classList.remove('open');
+});
+document.getElementById('btnCopyAi').addEventListener('click', () => {
+  navigator.clipboard.writeText(aiResult.textContent);
+  document.getElementById('btnCopyAi').textContent = 'コピーしました！';
+  setTimeout(() => { document.getElementById('btnCopyAi').textContent = 'コピー'; }, 2000);
+});
 
 // --- Calendar ---
 let calYear = new Date().getFullYear();

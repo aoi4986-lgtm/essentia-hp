@@ -127,6 +127,20 @@
     </div>
   </div>
 
+  <!-- AI モーダル -->
+  <div class="modal-backdrop" id="aiModalBackdrop">
+    <div class="modal" id="aiModal">
+      <div class="modal-header">
+        <h3 id="aiModalTitle">AI提案</h3>
+        <button class="btn-close" id="btnAiModalClose">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="aiResult" class="ai-result">生成中...</div>
+        <button class="btn btn-ghost btn-sm" id="btnCopyAi" style="margin-top:0.8rem">コピー</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/main.js"></script>
 </body>
 </html>
