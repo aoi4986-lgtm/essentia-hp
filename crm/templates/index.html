@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>顧客フォロー管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">顧客フォロー管理</h1>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <button class="btn btn-primary" id="btnAdd">＋ 顧客を追加</button>
+        <a href="/logout" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">ログアウト</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- サマリーバー -->
+    <div class="summary" id="summary"></div>
+
+    <!-- 顧客一覧 -->
+    <div class="customer-grid" id="customerGrid">
+      <div class="loading">読み込み中...</div>
+    </div>
+  </main>
+
+  <!-- 顧客登録・編集パネル -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="side-panel" id="sidePanel">
+    <div class="panel-header">
+      <h2 id="panelTitle">顧客を追加</h2>
+      <button class="btn-close" id="btnClose">×</button>
+    </div>
+    <form id="customerForm" class="form">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label>顧客名 <span class="required">*</span></label>
+        <input type="text" id="fName" placeholder="山田 太郎" required>
+      </div>
+      <div class="form-group">
+        <label>会社名</label>
+        <input type="text" id="fCompany" placeholder="株式会社〇〇">
+      </div>
+      <div class="form-group">
+        <label>連絡先</label>
+        <input type="text" id="fContact" placeholder="090-0000-0000 / email@example.com">
+      </div>
+      <div class="form-group">
+        <label>担当者</label>
+        <input type="text" id="fAssignee" placeholder="鈴木">
+      </div>
+      <div class="form-group">
+        <label>次回フォロー日</label>
+        <input type="date" id="fNextDate">
+      </div>
+      <div class="form-group">
+        <label>メモ</label>
+        <textarea id="fNotes" placeholder="商談内容・特記事項など" rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="btnSave">保存</button>
+        <button type="button" class="btn btn-ghost" id="btnCancel">キャンセル</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- フォロー記録モーダル -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="followModal">
+      <div class="modal-header">
+        <h3 id="modalCustomerName"></h3>
+        <button class="btn-close" id="btnModalClose">×</button>
+      </div>
+      <div class="modal-body">
+        <section class="follow-form-section">
+          <h4>フォローを記録する</h4>
+          <input type="hidden" id="followCustomerId">
+          <div class="form-group">
+            <label>実施日</label>
+            <input type="date" id="followDate">
+          </div>
+          <div class="form-group">
+            <label>内容メモ</label>
+            <textarea id="followMemo" placeholder="電話で確認済み、次回〇月に提案予定" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>次回フォロー日</label>
+            <input type="date" id="followNextDate">
+          </div>
+          <button class="btn btn-primary" id="btnFollowSave">記録する</button>
+        </section>
+        <section class="history-section">
+          <h4>フォロー履歴</h4>
+          <div id="historyList" class="history-list"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>
