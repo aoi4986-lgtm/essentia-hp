@@ -1,9 +1,11 @@
 import os
 import secrets
+import csv
+import io
 import psycopg2
 import psycopg2.extras
 import anthropic
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, Response
 from datetime import date, timedelta
 from functools import wraps
 
@@ -279,6 +281,59 @@ def get_history(cid):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
     return jsonify(result)
+
+
+@app.route('/export/csv', methods=['GET'])
+@login_required
+def export_csv():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM customers ORDER BY created_at ASC')
+    customers = cur.fetchall()
+    cur.execute('SELECT * FROM follow_history ORDER BY customer_id ASC, date DESC')
+    history_rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # 顧客IDごとに履歴をまとめる
+    history_map = {}
+    for h in history_rows:
+        cid = h['customer_id']
+        if cid not in history_map:
+            history_map[cid] = []
+        exp = h.get('expectation') or ''
+        exp_label = {'high': '高い', 'mid': '普通', 'low': '低い', 'ended': '終了'}.get(exp, exp)
+        history_map[cid].append(f"{h['date']} [{exp_label}] {h['memo'] or ''}")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        'ID', '顧客名', '会社名', '連絡先', '担当者', 'ジャンル', 'エリア',
+        'ステータス', '次回フォロー日', 'メモ', '登録日', 'フォロー履歴'
+    ])
+    for c in customers:
+        status = c.get('status') or 'active'
+        status_label = '終了済み' if status == 'ended' else 'アクティブ'
+        history_text = ' / '.join(history_map.get(c['id'], []))
+        writer.writerow([
+            c['id'], c['name'], c['company'] or '', c['contact'] or '',
+            c['assignee'] or '', c['genre'] or '', c.get('area') or '',
+            status_label,
+            c['next_follow_date'].isoformat() if c.get('next_follow_date') else '',
+            c['notes'] or '',
+            c['created_at'].strftime('%Y-%m-%d') if c.get('created_at') else '',
+            history_text
+        ])
+
+    output.seek(0)
+    bom = '﻿'  # Excel で文字化けしないよう BOM 付き UTF-8
+    csv_data = bom + output.getvalue()
+    filename = f"顧客リスト_{date.today().isoformat()}.csv"
+    return Response(
+        csv_data.encode('utf-8-sig'),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
 
 
 CHAT_SYSTEM = """あなたは営業担当者の優秀なパートナーです。顧客情報とフォロー履歴をもとに、担当者と一緒に次のアクションを考えます。
