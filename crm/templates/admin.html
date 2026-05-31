@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ユーザー管理 — 顧客フォロー管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #059669; --blue: #0ea5e9;
+      --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-400: #94a3b8;
+      --gray-600: #475569; --gray-800: #1e293b;
+      --red: #ef4444; --radius: 12px;
+      --shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--gray-100); color: var(--gray-800); min-height: 100vh; }
+    .header {
+      background: linear-gradient(135deg, #059669 0%, #0ea5e9 100%);
+      color: #fff; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(5,150,105,0.3);
+    }
+    .header-inner {
+      max-width: 900px; margin: 0 auto; padding: 0 1.5rem;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 1rem; font-weight: 800; letter-spacing: 0.04em; }
+    .btn {
+      padding: 0.45rem 1.1rem; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-ghost { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.28); }
+    .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.6rem; }
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem; color: var(--gray-800); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; font-size: 0.75rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.06em; padding: 0.5rem 0.75rem; border-bottom: 2px solid var(--gray-200); }
+    td { padding: 0.8rem 0.75rem; border-bottom: 1px solid var(--gray-200); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block; font-size: 0.74rem; font-weight: 600;
+      padding: 0.15rem 0.55rem; border-radius: 10px;
+    }
+    .badge-admin { background: #dbeafe; color: #1e40af; }
+    .badge-member { background: #f3f4f6; color: #374151; }
+    .badge-active { background: #d1fae5; color: #065f46; }
+    .badge-inactive { background: #fee2e2; color: #991b1b; }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.78rem; border-radius: 6px; }
+    .btn-danger { background: #fee2e2; color: var(--red); border: 1px solid #fca5a5; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success { background: #d1fae5; color: var(--green); border: 1px solid #a7f3d0; }
+    .btn-success:hover { background: #a7f3d0; }
+    .btn-gray { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+    .btn-gray:hover { background: var(--gray-200); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.82rem; font-weight: 600; color: var(--gray-600); }
+    .form-group input, .form-group select {
+      border: 1px solid var(--gray-200); border-radius: 8px; padding: 0.55rem 0.75rem;
+      font-family: inherit; font-size: 0.9rem; color: var(--gray-800); transition: border-color 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+    .btn-primary-grad {
+      background: linear-gradient(135deg, #059669, #0ea5e9);
+      color: #fff; border: none; border-radius: 8px;
+      padding: 0.6rem 1.4rem; font-family: inherit; font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 2px 10px rgba(5,150,105,0.25); transition: all 0.18s; margin-top: 0.5rem;
+    }
+    .btn-primary-grad:hover { box-shadow: 0 4px 16px rgba(5,150,105,0.4); transform: translateY(-1px); }
+    .msg { font-size: 0.83rem; padding: 0.5rem 0.75rem; border-radius: 6px; margin-top: 0.75rem; display: none; }
+    .msg.ok { background: #d1fae5; color: #065f46; display: block; }
+    .msg.err { background: #fee2e2; color: #991b1b; display: block; }
+    .reset-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .reset-input { border: 1px solid var(--gray-200); border-radius: 6px; padding: 0.3rem 0.6rem; font-family: inherit; font-size: 0.82rem; width: 140px; }
+    .reset-input:focus { outline: none; border-color: var(--green); }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <span class="logo">⚙ ユーザー管理</span>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <span style="color:rgba(255,255,255,0.85);font-size:0.85rem">👤 {{ user_name }}</span>
+        <a href="/" class="btn btn-ghost">← 一覧へ戻る</a>
+        <a href="/logout" class="btn btn-ghost">ログアウト</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- ユーザー一覧 -->
+    <div class="card">
+      <h2>登録ユーザー一覧</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>名前</th>
+            <th>メール</th>
+            <th>権限</th>
+            <th>状態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          {% for u in users %}
+          <tr id="row-{{ u.id }}">
+            <td><strong>{{ u.name }}</strong></td>
+            <td style="color:#475569">{{ u.email }}</td>
+            <td>
+              <span class="badge {{ 'badge-admin' if u.role == 'admin' else 'badge-member' }}">
+                {{ '管理者' if u.role == 'admin' else 'メンバー' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {{ 'badge-active' if u.is_active else 'badge-inactive' }}" id="status-{{ u.id }}">
+                {{ '有効' if u.is_active else '無効' }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                {% if u.id != current_user_id %}
+                <button class="btn btn-sm {{ 'btn-danger' if u.is_active else 'btn-success' }}"
+                        onclick="toggleUser({{ u.id }}, {{ 'true' if u.is_active else 'false' }})">
+                  {{ '無効化' if u.is_active else '有効化' }}
+                </button>
+                {% endif %}
+                <div class="reset-row">
+                  <input type="password" class="reset-input" id="rpw-{{ u.id }}" placeholder="新パスワード">
+                  <button class="btn btn-sm btn-gray" onclick="resetPassword({{ u.id }})">リセット</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ユーザー追加 -->
+    <div class="card">
+      <h2>ユーザーを追加</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>名前 <span style="color:#ef4444">*</span></label>
+          <input type="text" id="newName" placeholder="山田 花子">
+        </div>
+        <div class="form-group">
+          <label>メールアドレス <span style="color:#ef4444">*</span></label>
+          <input type="email" id="newEmail" placeholder="hanako@example.com">
+        </div>
+        <div class="form-group">
+          <label>パスワード（6文字以上）<span style="color:#ef4444">*</span></label>
+          <input type="password" id="newPassword" placeholder="初期パスワード">
+        </div>
+        <div class="form-group">
+          <label>権限</label>
+          <select id="newRole">
+            <option value="member">メンバー</option>
+            <option value="admin">管理者</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary-grad" onclick="addUser()">追加する</button>
+      <div class="msg" id="addMsg"></div>
+    </div>
+  </main>
+
+  <script>
+    async function toggleUser(id, isActive) {
+      const res = await fetch(`/admin/users/${id}/toggle`, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) location.reload();
+      else alert(data.error);
+    }
+
+    async function resetPassword(id) {
+      const pw = document.getElementById(`rpw-${id}`).value.trim();
+      if (!pw) { alert('新しいパスワードを入力してください'); return; }
+      const res = await fetch(`/admin/users/${id}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+      if (data.ok) { alert('パスワードをリセットしました'); document.getElementById(`rpw-${id}`).value = ''; }
+      else alert(data.error);
+    }
+
+    async function addUser() {
+      const msg  = document.getElementById('addMsg');
+      const name = document.getElementById('newName').value.trim();
+      const email = document.getElementById('newEmail').value.trim();
+      const password = document.getElementById('newPassword').value;
+      const role = document.getElementById('newRole').value;
+      msg.className = 'msg';
+      msg.textContent = '';
+      if (!name || !email || !password) { msg.className = 'msg err'; msg.textContent = '全項目を入力してください'; return; }
+      const res = await fetch('/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        msg.className = 'msg ok';
+        msg.textContent = `「${name}」を追加しました。ページを更新すると一覧に反映されます。`;
+        document.getElementById('newName').value = '';
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newPassword').value = '';
+      } else {
+        msg.className = 'msg err';
+        msg.textContent = data.error || 'エラーが発生しました';
+      }
+    }
+  </script>
+</body>
+</html>

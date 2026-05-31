@@ -8,6 +8,7 @@ import anthropic
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, Response
 from datetime import date, timedelta
 from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -30,6 +31,28 @@ def get_db():
 def init_db():
     conn = get_db()
     cur = conn.cursor()
+    # ユーザーテーブル
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            name TEXT NOT NULL,
+            role TEXT DEFAULT 'member',
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    # 初回起動時に管理者を自動作成
+    cur.execute('SELECT COUNT(*) FROM users')
+    if cur.fetchone()[0] == 0:
+        admin_email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+        admin_name  = os.environ.get('ADMIN_NAME', '管理者')
+        admin_pw    = os.environ.get('APP_PASSWORD', 'changeme')
+        cur.execute(
+            'INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)',
+            (admin_email.lower(), generate_password_hash(admin_pw), admin_name, 'admin')
+        )
     cur.execute('''
         CREATE TABLE IF NOT EXISTS customers (
             id SERIAL PRIMARY KEY,
@@ -46,6 +69,8 @@ def init_db():
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS genre TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS area TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS updated_by INTEGER REFERENCES users(id)")
     cur.execute('''
         CREATE TABLE IF NOT EXISTS follow_history (
             id SERIAL PRIMARY KEY,
@@ -97,10 +122,21 @@ def validate_date(value):
 def login():
     error = None
     if request.method == 'POST':
-        if request.form.get('password') == APP_PASSWORD:
+        email    = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        conn = get_db()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM users WHERE email=%s AND is_active=TRUE', (email,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user and check_password_hash(user['password_hash'], password):
             session['logged_in'] = True
+            session['user_id']   = user['id']
+            session['user_name'] = user['name']
+            session['user_role'] = user['role']
             return redirect(url_for('index'))
-        error = 'パスワードが違います'
+        error = 'メールアドレスまたはパスワードが違います'
     return render_template('login.html', error=error)
 
 
@@ -110,10 +146,23 @@ def logout():
     return redirect(url_for('login'))
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        if session.get('user_role') != 'admin':
+            return '権限がありません', 403
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html',
+                           user_name=session.get('user_name', ''),
+                           user_role=session.get('user_role', 'member'))
 
 
 @app.route('/customers', methods=['GET'])
@@ -122,7 +171,10 @@ def list_customers():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
-        'SELECT * FROM customers ORDER BY next_follow_date ASC NULLS LAST, created_at ASC'
+        '''SELECT c.*, u.name as created_by_name
+           FROM customers c
+           LEFT JOIN users u ON c.created_by = u.id
+           ORDER BY c.next_follow_date ASC NULLS LAST, c.created_at ASC'''
     )
     rows = cur.fetchall()
     cur.close()
@@ -162,11 +214,12 @@ def add_customer():
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'INSERT INTO customers (name, company, contact, assignee, genre, area, next_follow_date, notes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+        'INSERT INTO customers (name, company, contact, assignee, genre, area, next_follow_date, notes, created_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
         (name, sanitize(data.get('company')), sanitize(data.get('contact')),
          sanitize(data.get('assignee')), sanitize(data.get('genre')),
          sanitize(data.get('area')),
-         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')))
+         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
+         session.get('user_id'))
     )
     new_id = cur.fetchone()[0]
     conn.commit()
@@ -185,11 +238,12 @@ def update_customer(cid):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'UPDATE customers SET name=%s, company=%s, contact=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s WHERE id=%s',
+        'UPDATE customers SET name=%s, company=%s, contact=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s, updated_by=%s WHERE id=%s',
         (name, sanitize(data.get('company')), sanitize(data.get('contact')),
          sanitize(data.get('assignee')), sanitize(data.get('genre')),
          sanitize(data.get('area')),
-         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')), cid)
+         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
+         session.get('user_id'), cid)
     )
     conn.commit()
     cur.close()
@@ -281,6 +335,113 @@ def get_history(cid):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
     return jsonify(result)
+
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT id, email, name, role, is_active, created_at FROM users ORDER BY created_at ASC')
+    users = [dict(u) for u in cur.fetchall()]
+    cur.close()
+    conn.close()
+    for u in users:
+        if u.get('created_at'):
+            u['created_at'] = u['created_at'].isoformat()
+    return render_template('admin.html',
+                           users=users,
+                           current_user_id=session.get('user_id'),
+                           user_name=session.get('user_name', ''),
+                           user_role=session.get('user_role', 'admin'))
+
+
+@app.route('/admin/users', methods=['POST'])
+@admin_required
+def admin_add_user():
+    data     = request.json or {}
+    email    = sanitize(data.get('email'), 200)
+    name     = sanitize(data.get('name'), 100)
+    password = data.get('password', '')
+    role     = data.get('role', 'member')
+    if not email or not name or not password:
+        return jsonify({'error': '全項目を入力してください'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'パスワードは6文字以上にしてください'}), 400
+    if role not in ('admin', 'member'):
+        role = 'member'
+    conn = get_db()
+    cur  = conn.cursor()
+    try:
+        cur.execute(
+            'INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s) RETURNING id',
+            (email.lower(), generate_password_hash(password), name, role)
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'そのメールアドレスはすでに使われています'}), 409
+    cur.close()
+    conn.close()
+    return jsonify({'id': new_id}), 201
+
+
+@app.route('/admin/users/<int:uid>/toggle', methods=['POST'])
+@admin_required
+def admin_toggle_user(uid):
+    if uid == session.get('user_id'):
+        return jsonify({'error': '自分自身は変更できません'}), 400
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute('UPDATE users SET is_active = NOT is_active WHERE id=%s', (uid,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/admin/users/<int:uid>/reset-password', methods=['POST'])
+@admin_required
+def admin_reset_password(uid):
+    data     = request.json or {}
+    password = data.get('password', '')
+    if len(password) < 6:
+        return jsonify({'error': 'パスワードは6文字以上にしてください'}), 400
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute('UPDATE users SET password_hash=%s WHERE id=%s', (generate_password_hash(password), uid))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
+@app.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    data         = request.json or {}
+    current_pw   = data.get('current_password', '')
+    new_pw       = data.get('new_password', '')
+    if len(new_pw) < 6:
+        return jsonify({'error': 'パスワードは6文字以上にしてください'}), 400
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT password_hash FROM users WHERE id=%s', (session.get('user_id'),))
+    user = cur.fetchone()
+    if not user or not check_password_hash(user['password_hash'], current_pw):
+        cur.close()
+        conn.close()
+        return jsonify({'error': '現在のパスワードが違います'}), 400
+    cur2 = conn.cursor()
+    cur2.execute('UPDATE users SET password_hash=%s WHERE id=%s', (generate_password_hash(new_pw), session.get('user_id')))
+    conn.commit()
+    cur.close()
+    cur2.close()
+    conn.close()
+    return jsonify({'ok': True})
 
 
 @app.route('/export/csv', methods=['GET'])

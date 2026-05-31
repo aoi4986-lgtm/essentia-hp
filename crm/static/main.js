@@ -184,6 +184,7 @@ function cardHTML(c) {
       </div>
       <span class="follow-badge ${c.status}">${badgeLabel(c.status, c.next_follow_date || '')}</span>
       ${c.notes ? `<div style="font-size:0.82rem;color:#4b5563">${esc(c.notes)}</div>` : ''}
+      ${c.created_by_name ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:0.1rem">登録: ${esc(c.created_by_name)}</div>` : ''}
       <div class="card-actions">
         <button class="btn-follow-card btn-follow" data-id="${c.id}">フォロー記録</button>
         <button class="btn btn-sm btn-edit" style="background:var(--gray-100);color:var(--gray-600);border:none" data-id="${c.id}">編集</button>
@@ -624,6 +625,35 @@ document.querySelectorAll('#formExpectBtns .btn-expect').forEach(btn => {
 // --- 重複チェックイベント ---
 fName.addEventListener('input', checkDuplicate);
 fCompany.addEventListener('input', checkDuplicate);
+
+// --- パスワード変更モーダル ---
+const changePwBackdrop = document.getElementById('changePwBackdrop');
+document.getElementById('btnChangePw').addEventListener('click', () => {
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  document.getElementById('pwError').style.display = 'none';
+  changePwBackdrop.classList.add('open');
+});
+document.getElementById('btnChangePwClose').addEventListener('click', () => changePwBackdrop.classList.remove('open'));
+changePwBackdrop.addEventListener('click', e => { if (e.target === changePwBackdrop) changePwBackdrop.classList.remove('open'); });
+
+document.getElementById('btnChangePwSave').addEventListener('click', async () => {
+  const current = document.getElementById('pwCurrent').value;
+  const newPw   = document.getElementById('pwNew').value;
+  const confirm = document.getElementById('pwConfirm').value;
+  const errEl   = document.getElementById('pwError');
+  errEl.style.display = 'none';
+  if (newPw.length < 6) { errEl.textContent = 'パスワードは6文字以上にしてください'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirm) { errEl.textContent = '新しいパスワードが一致しません'; errEl.style.display = 'block'; return; }
+  const res  = await fetch('/change-password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ current_password: current, new_password: newPw })
+  });
+  const data = await res.json();
+  if (data.ok) { changePwBackdrop.classList.remove('open'); alert('パスワードを変更しました。'); }
+  else { errEl.textContent = data.error || 'エラーが発生しました'; errEl.style.display = 'block'; }
+});
 
 // --- Events ---
 document.getElementById('btnAdd').addEventListener('click', openAddPanel);
