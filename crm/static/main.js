@@ -4,6 +4,7 @@ let currentTab = 'list'; // 'list' | 'ended' | 'calendar'
 let searchQuery = '';
 let currentArea = '';
 let currentGenre = '';
+let currentStatusFilter = ''; // 'overdue' | 'u3' | 'u14' | 'u30' | ''
 
 // --- DOM refs ---
 const grid = document.getElementById('customerGrid');
@@ -57,14 +58,15 @@ function renderSummary() {
   const other   = active.filter(c => c.genre === 'その他').length;
   const ended   = customers.filter(c => c.account_status === 'ended').length;
 
+  const sf = currentStatusFilter;
   summary.innerHTML = `
     <div class="summary-group">
       <div class="summary-group-label">フォロー状況</div>
       <div class="summary-group-cards">
-        <div class="summary-card overdue"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
-        <div class="summary-card urgent"><span class="label">🔥 3日以内</span><span class="value">${u3}</span></div>
-        <div class="summary-card mid"><span class="label">😐 14日以内</span><span class="value">${u14}</span></div>
-        <div class="summary-card low"><span class="label">🧊 30日以内</span><span class="value">${u30}</span></div>
+        <div class="summary-card overdue ${sf==='overdue'?'selected':''}" data-filter="overdue" style="cursor:pointer"><span class="label">期限超過</span><span class="value">${overdue}</span></div>
+        <div class="summary-card urgent ${sf==='u3'?'selected':''}" data-filter="u3" style="cursor:pointer"><span class="label">🔥 3日以内</span><span class="value">${u3}</span></div>
+        <div class="summary-card mid ${sf==='u14'?'selected':''}" data-filter="u14" style="cursor:pointer"><span class="label">😐 14日以内</span><span class="value">${u14}</span></div>
+        <div class="summary-card low ${sf==='u30'?'selected':''}" data-filter="u30" style="cursor:pointer"><span class="label">🧊 30日以内</span><span class="value">${u30}</span></div>
       </div>
     </div>
     <div class="summary-divider"></div>
@@ -78,6 +80,20 @@ function renderSummary() {
       </div>
     </div>
   `;
+
+  // サマリーカードのクリックで絞り込み
+  document.querySelectorAll('.summary-card[data-filter]').forEach(card => {
+    card.addEventListener('click', () => {
+      const f = card.dataset.filter;
+      currentStatusFilter = currentStatusFilter === f ? '' : f; // 同じカードで解除
+      if (currentTab === 'list') {
+        renderSummary();
+        renderGrid();
+      } else {
+        setTab('list');
+      }
+    });
+  });
 }
 
 // --- Grid ---
@@ -86,6 +102,25 @@ function renderGrid() {
   let list = customers.filter(c =>
     isEnded ? c.account_status === 'ended' : c.account_status !== 'ended'
   );
+
+  if (currentStatusFilter) {
+    const now = new Date();
+    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const today = fmt(now);
+    const d3  = new Date(now); d3.setDate(d3.getDate() + 3);
+    const d14 = new Date(now); d14.setDate(d14.getDate() + 14);
+    const d30 = new Date(now); d30.setDate(d30.getDate() + 30);
+    const s3 = fmt(d3), s14 = fmt(d14), s30 = fmt(d30);
+    if (currentStatusFilter === 'overdue') {
+      list = list.filter(c => c.next_follow_date && c.next_follow_date < today);
+    } else if (currentStatusFilter === 'u3') {
+      list = list.filter(c => c.next_follow_date && c.next_follow_date >= today && c.next_follow_date <= s3);
+    } else if (currentStatusFilter === 'u14') {
+      list = list.filter(c => c.next_follow_date && c.next_follow_date > s3 && c.next_follow_date <= s14);
+    } else if (currentStatusFilter === 'u30') {
+      list = list.filter(c => c.next_follow_date && c.next_follow_date > s14 && c.next_follow_date <= s30);
+    }
+  }
 
   if (currentGenre) {
     list = list.filter(c => c.genre === currentGenre);

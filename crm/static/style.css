@@ -137,6 +137,8 @@ body {
   transition: transform 0.18s, box-shadow 0.18s;
 }
 .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.summary-card[data-filter] { cursor: pointer; }
+.summary-card[data-filter].selected { box-shadow: 0 0 0 3px currentColor, var(--shadow-lg); transform: translateY(-2px); }
 .summary-card .label { font-size: 0.78rem; color: var(--gray-400); font-weight: 500; }
 .summary-card .value { font-size: 1.9rem; font-weight: 800; }
 .summary-card.overdue { border-top-color: var(--red); }
