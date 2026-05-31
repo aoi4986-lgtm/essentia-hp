@@ -130,6 +130,34 @@ def validate_date(value):
 
 # --- Routes ---
 
+@app.route('/setup')
+def setup():
+    """ユーザーが1人もいない場合だけ管理者を自動作成する（安全な初期設定用）"""
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute('SELECT COUNT(*) FROM users')
+    count = cur.fetchone()[0]
+    if count > 0:
+        cur.close()
+        conn.close()
+        return redirect(url_for('login'))
+    admin_email = os.environ.get('ADMIN_EMAIL', '')
+    admin_name  = os.environ.get('ADMIN_NAME', '管理者')
+    admin_pw    = os.environ.get('APP_PASSWORD', '')
+    if not admin_email or not admin_pw:
+        cur.close()
+        conn.close()
+        return 'ADMIN_EMAIL と APP_PASSWORD を環境変数に設定してください', 500
+    cur.execute(
+        'INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)',
+        (admin_email.lower(), generate_password_hash(admin_pw), admin_name, 'admin')
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return redirect(url_for('login'))
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
