@@ -130,27 +130,34 @@ def validate_date(value):
 
 # --- Routes ---
 
+@app.route('/debug-users')
+def debug_users():
+    """DBのユーザー状態を確認（パスワードは表示しない）"""
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT id, email, name, role, is_active FROM users')
+    users = [dict(u) for u in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify({'count': len(users), 'users': users})
+
+
 @app.route('/setup')
 def setup():
-    """ユーザーが1人もいない場合だけ管理者を自動作成する（安全な初期設定用）"""
-    conn = get_db()
-    cur  = conn.cursor()
-    cur.execute('SELECT COUNT(*) FROM users')
-    count = cur.fetchone()[0]
-    if count > 0:
-        cur.close()
-        conn.close()
-        return redirect(url_for('login'))
+    """管理者を作成 or パスワードをリセットする（初期設定用）"""
     admin_email = os.environ.get('ADMIN_EMAIL', '')
     admin_name  = os.environ.get('ADMIN_NAME', '管理者')
     admin_pw    = os.environ.get('APP_PASSWORD', '')
     if not admin_email or not admin_pw:
-        cur.close()
-        conn.close()
         return 'ADMIN_EMAIL と APP_PASSWORD を環境変数に設定してください', 500
+    conn = get_db()
+    cur  = conn.cursor()
     cur.execute(
-        'INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)',
-        (admin_email.lower(), generate_password_hash(admin_pw), admin_name, 'admin')
+        '''INSERT INTO users (email, password_hash, name, role, is_active)
+           VALUES (%s, %s, %s, 'admin', TRUE)
+           ON CONFLICT (email) DO UPDATE
+           SET password_hash = EXCLUDED.password_hash, is_active = TRUE''',
+        (admin_email.lower(), generate_password_hash(admin_pw), admin_name)
     )
     conn.commit()
     cur.close()
