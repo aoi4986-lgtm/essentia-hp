@@ -68,9 +68,20 @@ def init_db():
     ''')
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS genre TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS area TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS phone TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS email_address TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS updated_by INTEGER REFERENCES users(id)")
+    # 重複制約（name + company の組み合わせをユニークに）
+    try:
+        cur.execute('''
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_name_company
+            ON customers (LOWER(TRIM(name)), LOWER(TRIM(COALESCE(company, ''))))
+        ''')
+        conn.commit()
+    except Exception:
+        conn.rollback()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS follow_history (
             id SERIAL PRIMARY KEY,
@@ -213,16 +224,25 @@ def add_customer():
         return jsonify({'error': '顧客名は必須です'}), 400
     conn = get_db()
     cur = conn.cursor()
-    cur.execute(
-        'INSERT INTO customers (name, company, contact, assignee, genre, area, next_follow_date, notes, created_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
-        (name, sanitize(data.get('company')), sanitize(data.get('contact')),
-         sanitize(data.get('assignee')), sanitize(data.get('genre')),
-         sanitize(data.get('area')),
-         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
-         session.get('user_id'))
-    )
-    new_id = cur.fetchone()[0]
-    conn.commit()
+    try:
+        cur.execute(
+            'INSERT INTO customers (name, company, phone, email_address, assignee, genre, area, next_follow_date, notes, created_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+            (name, sanitize(data.get('company')),
+             sanitize(data.get('phone')), sanitize(data.get('email_address')),
+             sanitize(data.get('assignee')), sanitize(data.get('genre')),
+             sanitize(data.get('area')),
+             validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
+             session.get('user_id'))
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        if 'idx_customers_name_company' in str(e):
+            return jsonify({'error': '同じ顧客名・会社名の組み合わせがすでに登録されています'}), 409
+        return jsonify({'error': '登録に失敗しました'}), 500
     cur.close()
     conn.close()
     return jsonify({'id': new_id}), 201
@@ -237,15 +257,24 @@ def update_customer(cid):
         return jsonify({'error': '顧客名は必須です'}), 400
     conn = get_db()
     cur = conn.cursor()
-    cur.execute(
-        'UPDATE customers SET name=%s, company=%s, contact=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s, updated_by=%s WHERE id=%s',
-        (name, sanitize(data.get('company')), sanitize(data.get('contact')),
-         sanitize(data.get('assignee')), sanitize(data.get('genre')),
-         sanitize(data.get('area')),
-         validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
-         session.get('user_id'), cid)
-    )
-    conn.commit()
+    try:
+        cur.execute(
+            'UPDATE customers SET name=%s, company=%s, phone=%s, email_address=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s, updated_by=%s WHERE id=%s',
+            (name, sanitize(data.get('company')),
+             sanitize(data.get('phone')), sanitize(data.get('email_address')),
+             sanitize(data.get('assignee')), sanitize(data.get('genre')),
+             sanitize(data.get('area')),
+             validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
+             session.get('user_id'), cid)
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        if 'idx_customers_name_company' in str(e):
+            return jsonify({'error': '同じ顧客名・会社名の組み合わせがすでに登録されています'}), 409
+        return jsonify({'error': '更新に失敗しました'}), 500
     cur.close()
     conn.close()
     return jsonify({'ok': True})
@@ -469,7 +498,7 @@ def export_csv():
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        'ID', '顧客名', '会社名', '連絡先', '担当者', 'ジャンル', 'エリア',
+        'ID', '顧客名', '会社名', '電話番号', 'メールアドレス', '担当者', 'ジャンル', 'エリア',
         'ステータス', '次回フォロー日', 'メモ', '登録日', 'フォロー履歴'
     ])
     for c in customers:
@@ -477,7 +506,8 @@ def export_csv():
         status_label = '終了済み' if status == 'ended' else 'アクティブ'
         history_text = ' / '.join(history_map.get(c['id'], []))
         writer.writerow([
-            c['id'], c['name'], c['company'] or '', c['contact'] or '',
+            c['id'], c['name'], c['company'] or '',
+            c.get('phone') or '', c.get('email_address') or '',
             c['assignee'] or '', c['genre'] or '', c.get('area') or '',
             status_label,
             c['next_follow_date'].isoformat() if c.get('next_follow_date') else '',
@@ -517,7 +547,7 @@ def build_customer_context(cid):
     conn.close()
     if not c:
         return None, None
-    ctx = f"顧客名: {c['name']}\n会社名: {c['company'] or '未登録'}\n連絡先: {c['contact'] or '未登録'}\n担当者: {c['assignee'] or '未登録'}\nジャンル: {c['genre'] or '未登録'}\n次回フォロー日: {c['next_follow_date'] or '未設定'}\nメモ: {c['notes'] or 'なし'}\n"
+    ctx = f"顧客名: {c['name']}\n会社名: {c['company'] or '未登録'}\n電話番号: {c.get('phone') or '未登録'}\nメール: {c.get('email_address') or '未登録'}\n担当者: {c['assignee'] or '未登録'}\nジャンル: {c['genre'] or '未登録'}\nエリア: {c.get('area') or '未登録'}\n次回フォロー日: {c['next_follow_date'] or '未設定'}\nメモ: {c['notes'] or 'なし'}\n"
     if history:
         ctx += "\n【フォロー履歴（直近5件）】\n"
         for h in history:

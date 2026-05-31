@@ -18,6 +18,8 @@ const fName = document.getElementById('fName');
 const fCompany = document.getElementById('fCompany');
 const fContact = document.getElementById('fContact');
 const fAssignee = document.getElementById('fAssignee');
+const fPhone = document.getElementById('fPhone');
+const fEmail = document.getElementById('fEmail');
 const fGenre = document.getElementById('fGenre');
 const fArea = document.getElementById('fArea');
 const fNextDate = document.getElementById('fNextDate');
@@ -179,7 +181,8 @@ function cardHTML(c) {
       <div class="card-meta">
         ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
         ${c.area ? `<span><span class="icon">📍</span>${esc(c.area)}</span>` : ''}
-        ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
+        ${c.phone ? `<span><span class="icon">📞</span>${esc(c.phone)}</span>` : ''}
+        ${c.email_address ? `<span><span class="icon">✉</span>${esc(c.email_address)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
       <span class="follow-badge ${c.status}">${badgeLabel(c.status, c.next_follow_date || '')}</span>
@@ -208,7 +211,8 @@ function cardHTMLEnded(c) {
       <div class="card-meta">
         ${c.genre ? `<span><span class="icon">🏷</span>${esc(c.genre)}</span>` : ''}
         ${c.area ? `<span><span class="icon">📍</span>${esc(c.area)}</span>` : ''}
-        ${c.contact ? `<span><span class="icon">📞</span>${esc(c.contact)}</span>` : ''}
+        ${c.phone ? `<span><span class="icon">📞</span>${esc(c.phone)}</span>` : ''}
+        ${c.email_address ? `<span><span class="icon">✉</span>${esc(c.email_address)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
       <span class="follow-badge ended-badge">✓ フォロー終了</span>
@@ -231,12 +235,13 @@ function checkDuplicate() {
   const companyVal = fCompany.value.trim().toLowerCase();
   const currentId  = editId.value;
 
+  const emailVal    = fEmail.value.trim().toLowerCase();
   const nameWarn    = document.getElementById('dupWarnName');
   const companyWarn = document.getElementById('dupWarnCompany');
   nameWarn.innerHTML = '';
   companyWarn.innerHTML = '';
 
-  if (!nameVal && !companyVal) return;
+  if (!nameVal && !companyVal && !emailVal) return;
 
   const others = customers.filter(c => String(c.id) !== String(currentId) && c.account_status !== 'ended');
 
@@ -251,6 +256,14 @@ function checkDuplicate() {
     const hits = others.filter(c => (c.company || '').toLowerCase().includes(companyVal) || companyVal.includes((c.company || '').toLowerCase()));
     if (hits.length) {
       companyWarn.innerHTML = `⚠ 似た会社名: ${hits.map(c => `<b>${esc(c.company)}</b>（${esc(c.name)}）`).join('、')}`;
+    }
+  }
+
+  if (emailVal) {
+    const hits = others.filter(c => (c.email_address || '').toLowerCase() === emailVal);
+    if (hits.length) {
+      companyWarn.innerHTML += (companyWarn.innerHTML ? '<br>' : '') +
+        `⚠ 同じメールアドレス: ${hits.map(c => `<b>${esc(c.name)}</b>${c.company ? '（' + esc(c.company) + '）' : ''}`).join('、')}`;
     }
   }
 }
@@ -274,7 +287,8 @@ function openEditPanel(id) {
   editId.value = c.id;
   fName.value = c.name || '';
   fCompany.value = c.company || '';
-  fContact.value = c.contact || '';
+  fPhone.value = c.phone || '';
+  fEmail.value = c.email_address || '';
   fAssignee.value = c.assignee || '';
   fGenre.value = c.genre || '';
   fArea.value = c.area || '';
@@ -301,17 +315,24 @@ form.addEventListener('submit', async e => {
   const data = {
     name: fName.value.trim(),
     company: fCompany.value.trim(),
-    contact: fContact.value.trim(),
+    phone: fPhone.value.trim(),
+    email_address: fEmail.value.trim(),
     assignee: fAssignee.value.trim(),
     genre: fGenre.value || null,
     area: fArea.value || null,
     next_follow_date: fNextDate.value || null,
     notes: fNotes.value.trim(),
   };
+  let res;
   if (editId.value) {
-    await fetch(`${API}/customers/${editId.value}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    res = await fetch(`${API}/customers/${editId.value}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
   } else {
-    await fetch(`${API}/customers`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    res = await fetch(`${API}/customers`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  }
+  if (!res.ok) {
+    const err = await res.json();
+    alert(err.error || '保存に失敗しました');
+    return;
   }
   closePanel();
   loadCustomers();
@@ -625,6 +646,7 @@ document.querySelectorAll('#formExpectBtns .btn-expect').forEach(btn => {
 // --- 重複チェックイベント ---
 fName.addEventListener('input', checkDuplicate);
 fCompany.addEventListener('input', checkDuplicate);
+fEmail.addEventListener('input', checkDuplicate);
 
 // --- パスワード変更モーダル ---
 const changePwBackdrop = document.getElementById('changePwBackdrop');
