@@ -53,6 +53,7 @@ def init_db():
             'INSERT INTO users (email, password_hash, name, role) VALUES (%s, %s, %s, %s)',
             (admin_email.lower(), generate_password_hash(admin_pw), admin_name, 'admin')
         )
+    conn.commit()  # ← 管理者ユーザーを先にコミット（以降の処理でロールバックされないように）
     cur.execute('''
         CREATE TABLE IF NOT EXISTS customers (
             id SERIAL PRIMARY KEY,
