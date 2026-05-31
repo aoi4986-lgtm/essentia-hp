@@ -671,6 +671,20 @@ body {
 .btn-expect.selected { opacity: 1; filter: brightness(0.9); }
 .expect-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.3rem; }
 
+/* 重複チェック警告 */
+.dup-warn {
+  font-size: 0.78rem;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  margin-top: 0.25rem;
+  display: none;
+  line-height: 1.5;
+}
+.dup-warn:not(:empty) { display: block; }
+
 @media (max-width: 600px) {
   .side-panel { width: 100vw; }
   .summary-card { min-width: 120px; }

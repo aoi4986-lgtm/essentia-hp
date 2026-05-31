@@ -224,6 +224,36 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// --- 重複チェック ---
+function checkDuplicate() {
+  const nameVal    = fName.value.trim().toLowerCase();
+  const companyVal = fCompany.value.trim().toLowerCase();
+  const currentId  = editId.value;
+
+  const nameWarn    = document.getElementById('dupWarnName');
+  const companyWarn = document.getElementById('dupWarnCompany');
+  nameWarn.innerHTML = '';
+  companyWarn.innerHTML = '';
+
+  if (!nameVal && !companyVal) return;
+
+  const others = customers.filter(c => String(c.id) !== String(currentId) && c.account_status !== 'ended');
+
+  if (nameVal) {
+    const hits = others.filter(c => (c.name || '').toLowerCase().includes(nameVal) || nameVal.includes((c.name || '').toLowerCase()));
+    if (hits.length) {
+      nameWarn.innerHTML = `⚠ 似た顧客名: ${hits.map(c => `<b>${esc(c.name)}</b>${c.company ? '（' + esc(c.company) + '）' : ''}`).join('、')}`;
+    }
+  }
+
+  if (companyVal) {
+    const hits = others.filter(c => (c.company || '').toLowerCase().includes(companyVal) || companyVal.includes((c.company || '').toLowerCase()));
+    if (hits.length) {
+      companyWarn.innerHTML = `⚠ 似た会社名: ${hits.map(c => `<b>${esc(c.company)}</b>（${esc(c.name)}）`).join('、')}`;
+    }
+  }
+}
+
 // --- Side Panel ---
 function openAddPanel() {
   panelTitle.textContent = '顧客を追加';
@@ -231,6 +261,8 @@ function openAddPanel() {
   form.reset();
   fNextDate.value = '';
   document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
+  document.getElementById('dupWarnName').innerHTML = '';
+  document.getElementById('dupWarnCompany').innerHTML = '';
   showPanel();
 }
 
@@ -248,6 +280,8 @@ function openEditPanel(id) {
   fNextDate.value = c.next_follow_date || '';
   fNotes.value = c.notes || '';
   document.querySelectorAll('#formExpectBtns .btn-expect').forEach(b => b.classList.remove('selected'));
+  document.getElementById('dupWarnName').innerHTML = '';
+  document.getElementById('dupWarnCompany').innerHTML = '';
   showPanel();
 }
 
@@ -586,6 +620,10 @@ document.querySelectorAll('#formExpectBtns .btn-expect').forEach(btn => {
     fNextDate.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   });
 });
+
+// --- 重複チェックイベント ---
+fName.addEventListener('input', checkDuplicate);
+fCompany.addEventListener('input', checkDuplicate);
 
 // --- Events ---
 document.getElementById('btnAdd').addEventListener('click', openAddPanel);
