@@ -2,6 +2,9 @@ import os
 import secrets
 import csv
 import io
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import psycopg2
 import psycopg2.extras
 import anthropic
@@ -17,6 +20,10 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 APP_PASSWORD = os.environ.get('APP_PASSWORD', 'changeme')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 ai_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+
+GMAIL_USER     = os.environ.get('GMAIL_USER', '')
+GMAIL_APP_PW   = os.environ.get('GMAIL_APP_PASSWORD', '')
+NOTIFY_TOKEN   = os.environ.get('NOTIFY_TOKEN', '')
 
 MAX_TEXT_LEN = 500
 
@@ -593,6 +600,119 @@ def stats_data():
             'overdue_count': overdue_count,
         }
     })
+
+
+def send_email(to_addr, subject, body):
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = GMAIL_USER
+    msg['To']      = to_addr
+    msg.attach(MIMEText(body, 'html', 'utf-8'))
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(GMAIL_USER, GMAIL_APP_PW)
+        smtp.send_message(msg)
+
+
+@app.route('/notify')
+def notify():
+    """担当者ごとに期限超過・期限間近の顧客をメール通知する"""
+    token = request.args.get('token', '')
+    if not NOTIFY_TOKEN or token != NOTIFY_TOKEN:
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not GMAIL_USER or not GMAIL_APP_PW:
+        return jsonify({'error': 'Gmail設定がありません'}), 500
+
+    today = date.today()
+    d3    = (today + timedelta(days=3)).isoformat()
+    today_str = today.isoformat()
+
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    # 担当者名とメールアドレスの対応を取得
+    cur.execute("SELECT name, email FROM users WHERE is_active = TRUE AND email != ''")
+    user_emails = {u['name']: u['email'] for u in cur.fetchall()}
+
+    # 期限超過・3日以内の顧客を取得
+    cur.execute("""
+        SELECT name, company, assignee, next_follow_date
+        FROM customers
+        WHERE status != 'ended'
+          AND next_follow_date IS NOT NULL
+          AND next_follow_date <= %s
+        ORDER BY next_follow_date ASC
+    """, (d3,))
+    customers_to_notify = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # 担当者ごとに分類
+    by_assignee = {}
+    for c in customers_to_notify:
+        a = c['assignee'] or '未設定'
+        if a not in by_assignee:
+            by_assignee[a] = {'overdue': [], 'soon': []}
+        nfd = c['next_follow_date'].isoformat()
+        if nfd < today_str:
+            by_assignee[a]['overdue'].append(c)
+        else:
+            by_assignee[a]['soon'].append(c)
+
+    sent = []
+    skipped = []
+    for assignee, data in by_assignee.items():
+        if not data['overdue'] and not data['soon']:
+            continue
+        email = user_emails.get(assignee)
+        if not email:
+            skipped.append(assignee)
+            continue
+
+        overdue_rows = ''.join([
+            f"<tr><td style='padding:6px 12px;border-bottom:1px solid #fee2e2'><b>{c['name']}</b>{' / ' + c['company'] if c['company'] else ''}</td>"
+            f"<td style='padding:6px 12px;border-bottom:1px solid #fee2e2;color:#ef4444'>{c['next_follow_date'].isoformat()}</td></tr>"
+            for c in data['overdue']
+        ])
+        soon_rows = ''.join([
+            f"<tr><td style='padding:6px 12px;border-bottom:1px solid #fef3c7'><b>{c['name']}</b>{' / ' + c['company'] if c['company'] else ''}</td>"
+            f"<td style='padding:6px 12px;border-bottom:1px solid #fef3c7;color:#f59e0b'>{c['next_follow_date'].isoformat()}</td></tr>"
+            for c in data['soon']
+        ])
+
+        overdue_section = f"""
+        <h3 style='color:#ef4444;margin:20px 0 8px'>⚠ 期限超過（{len(data['overdue'])}件）</h3>
+        <table style='width:100%;border-collapse:collapse;background:#fef2f2;border-radius:8px'>
+          <tr style='background:#fee2e2'><th style='padding:6px 12px;text-align:left'>顧客名</th><th style='padding:6px 12px;text-align:left'>期限日</th></tr>
+          {overdue_rows}
+        </table>""" if data['overdue'] else ''
+
+        soon_section = f"""
+        <h3 style='color:#f59e0b;margin:20px 0 8px'>🔥 3日以内（{len(data['soon'])}件）</h3>
+        <table style='width:100%;border-collapse:collapse;background:#fffbeb;border-radius:8px'>
+          <tr style='background:#fef3c7'><th style='padding:6px 12px;text-align:left'>顧客名</th><th style='padding:6px 12px;text-align:left'>期限日</th></tr>
+          {soon_rows}
+        </table>""" if data['soon'] else ''
+
+        total = len(data['overdue']) + len(data['soon'])
+        body = f"""
+        <div style='font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px'>
+          <h2 style='color:#059669'>📋 本日のフォロー確認</h2>
+          <p style='color:#475569'>{today_str}　担当: {assignee}さん</p>
+          <p style='color:#1e293b'>フォローが必要な顧客が <b>{total}件</b> あります。</p>
+          {overdue_section}
+          {soon_section}
+          <div style='margin-top:24px'>
+            <a href='https://essentia-crm.onrender.com' style='background:linear-gradient(135deg,#059669,#0ea5e9);color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:bold'>CRMを開く</a>
+          </div>
+          <p style='color:#94a3b8;font-size:12px;margin-top:24px'>このメールは自動送信です。</p>
+        </div>"""
+
+        try:
+            send_email(email, f'【フォロー管理】本日の確認 {total}件 ({today_str})', body)
+            sent.append(assignee)
+        except Exception as e:
+            skipped.append(f'{assignee}({str(e)})')
+
+    return jsonify({'sent': sent, 'skipped': skipped, 'date': today_str})
 
 
 @app.route('/export/csv', methods=['GET'])
