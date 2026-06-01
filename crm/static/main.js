@@ -33,6 +33,59 @@ const followNextDate = document.getElementById('followNextDate');
 const historyList = document.getElementById('historyList');
 const modalCustomerName = document.getElementById('modalCustomerName');
 
+// --- マスターデータ ---
+let masterGenres = [];
+let masterAreas  = [];
+
+async function loadMasters() {
+  const [gRes, aRes] = await Promise.all([
+    fetch(`${API}/master/genres`),
+    fetch(`${API}/master/areas`)
+  ]);
+  masterGenres = await gRes.json();
+  masterAreas  = await aRes.json();
+  updateGenreSelect();
+  updateAreaSelect();
+  renderGenreFilter();
+  renderAreaFilter();
+}
+
+function updateGenreSelect() {
+  fGenre.innerHTML = '<option value="">未選択</option>' +
+    masterGenres.map(g => `<option value="${esc(g.name)}">${esc(g.name)}</option>`).join('');
+}
+
+function updateAreaSelect() {
+  fArea.innerHTML = '<option value="">未選択</option>' +
+    masterAreas.map(a => `<option value="${esc(a.name)}">${esc(a.name)}</option>`).join('');
+}
+
+function renderGenreFilter() {
+  const wrap = document.getElementById('genreFilter');
+  wrap.innerHTML = `<button class="area-btn ${currentGenre === '' ? 'active' : ''}" data-genre="">すべて</button>` +
+    masterGenres.map(g => `<button class="area-btn ${currentGenre === g.name ? 'active' : ''}" data-genre="${esc(g.name)}">${esc(g.name)}</button>`).join('');
+  wrap.querySelectorAll('.area-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentGenre = btn.dataset.genre;
+      renderGenreFilter();
+      if (currentTab !== 'calendar') renderGrid();
+    });
+  });
+}
+
+function renderAreaFilter() {
+  const wrap = document.getElementById('areaFilter');
+  wrap.innerHTML = `<button class="area-btn ${currentArea === '' ? 'active' : ''}" data-area="">すべて</button>` +
+    masterAreas.map(a => `<button class="area-btn ${currentArea === a.name ? 'active' : ''}" data-area="${esc(a.name)}">${esc(a.name)}</button>`).join('');
+  wrap.querySelectorAll('.area-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentArea = btn.dataset.area;
+      renderAreaFilter();
+      if (currentTab !== 'calendar') renderGrid();
+    });
+  });
+}
+
 // --- Load ---
 async function loadCustomers() {
   const res = await fetch(`${API}/customers`);
@@ -644,25 +697,7 @@ document.getElementById('searchInput').addEventListener('input', e => {
   if (currentTab !== 'calendar') renderGrid();
 });
 
-// --- ジャンルフィルター ---
-document.querySelectorAll('#genreFilter .area-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#genreFilter .area-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentGenre = btn.dataset.genre;
-    if (currentTab !== 'calendar') renderGrid();
-  });
-});
-
-// --- エリアフィルター ---
-document.querySelectorAll('#areaFilter .area-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#areaFilter .area-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentArea = btn.dataset.area;
-    if (currentTab !== 'calendar') renderGrid();
-  });
-});
+// マスターデータ・顧客データを並行ロード
 
 // --- 期待度ボタン（フォローモーダル） ---
 document.querySelectorAll('#modalBackdrop .btn-expect').forEach(btn => {
@@ -729,4 +764,5 @@ document.getElementById('btnModalClose').addEventListener('click', closeModal);
 modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
 
 // --- Init ---
+loadMasters();
 loadCustomers();

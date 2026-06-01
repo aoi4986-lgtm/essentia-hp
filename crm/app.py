@@ -101,6 +101,30 @@ def init_db():
         )
     ''')
     cur.execute("ALTER TABLE follow_history ADD COLUMN IF NOT EXISTS expectation TEXT")
+    # ジャンル・エリアマスターテーブル
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS genres (
+            id SERIAL PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            sort_order INTEGER DEFAULT 0
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS areas (
+            id SERIAL PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            sort_order INTEGER DEFAULT 0
+        )
+    ''')
+    # 初期データ投入
+    cur.execute('SELECT COUNT(*) FROM genres')
+    if cur.fetchone()[0] == 0:
+        for i, g in enumerate(['入居付', 'OA関係', 'その他']):
+            cur.execute('INSERT INTO genres (name, sort_order) VALUES (%s, %s)', (g, i))
+    cur.execute('SELECT COUNT(*) FROM areas')
+    if cur.fetchone()[0] == 0:
+        for i, a in enumerate(['大阪府', '兵庫県', '京都府', '奈良県', '滋賀県', '和歌山県']):
+            cur.execute('INSERT INTO areas (name, sort_order) VALUES (%s, %s)', (a, i))
     # 変更履歴テーブル
     cur.execute('''
         CREATE TABLE IF NOT EXISTS activity_log (
@@ -440,6 +464,59 @@ def get_history(cid):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
     return jsonify(result)
+
+
+@app.route('/master/<string:table>', methods=['GET'])
+@login_required
+def master_list(table):
+    if table not in ('genres', 'areas'):
+        return jsonify({'error': 'Invalid'}), 400
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(f'SELECT * FROM {table} ORDER BY sort_order ASC, name ASC')
+    rows = [dict(r) for r in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(rows)
+
+
+@app.route('/master/<string:table>', methods=['POST'])
+@admin_required
+def master_add(table):
+    if table not in ('genres', 'areas'):
+        return jsonify({'error': 'Invalid'}), 400
+    data = request.json or {}
+    name = sanitize(data.get('name'), 100)
+    if not name:
+        return jsonify({'error': '名前は必須です'}), 400
+    conn = get_db()
+    cur  = conn.cursor()
+    try:
+        cur.execute(f'INSERT INTO {table} (name) VALUES (%s) RETURNING id', (name,))
+        new_id = cur.fetchone()[0]
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'すでに同じ名前が存在します'}), 409
+    cur.close()
+    conn.close()
+    return jsonify({'id': new_id}), 201
+
+
+@app.route('/master/<string:table>/<int:mid>', methods=['DELETE'])
+@admin_required
+def master_delete(table, mid):
+    if table not in ('genres', 'areas'):
+        return jsonify({'error': 'Invalid'}), 400
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute(f'DELETE FROM {table} WHERE id=%s', (mid,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
 
 
 @app.route('/customers/<int:cid>/activity')

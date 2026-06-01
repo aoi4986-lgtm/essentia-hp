@@ -143,6 +143,26 @@
       </table>
     </div>
 
+    <!-- ジャンル管理 -->
+    <div class="card">
+      <h2>🏷 ジャンル管理</h2>
+      <div id="genreList" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem"></div>
+      <div style="display:flex;gap:0.5rem">
+        <input type="text" id="newGenre" placeholder="新しいジャンル名" style="border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem 0.75rem;font-family:inherit;font-size:0.9rem;flex:1">
+        <button class="btn-primary-grad" style="margin-top:0" onclick="addMaster('genres', 'newGenre', loadGenres)">追加</button>
+      </div>
+    </div>
+
+    <!-- エリア管理 -->
+    <div class="card">
+      <h2>📍 エリア管理</h2>
+      <div id="areaList" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem"></div>
+      <div style="display:flex;gap:0.5rem">
+        <input type="text" id="newArea" placeholder="新しいエリア名" style="border:1px solid #e2e8f0;border-radius:8px;padding:0.5rem 0.75rem;font-family:inherit;font-size:0.9rem;flex:1">
+        <button class="btn-primary-grad" style="margin-top:0" onclick="addMaster('areas', 'newArea', loadAreas)">追加</button>
+      </div>
+    </div>
+
     <!-- ユーザー追加 -->
     <div class="card">
       <h2>ユーザーを追加</h2>
@@ -201,6 +221,50 @@
   </div>
 
   <script>
+    async function loadGenres() {
+      const res  = await fetch('/master/genres');
+      const data = await res.json();
+      document.getElementById('genreList').innerHTML = data.map(g =>
+        `<span style="background:#f1f5f9;border-radius:20px;padding:0.3rem 0.8rem;font-size:0.85rem;display:flex;align-items:center;gap:0.4rem">
+          ${g.name}
+          <button onclick="deleteMaster('genres',${g.id},loadGenres)" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;line-height:1;padding:0">×</button>
+        </span>`
+      ).join('') || '<span style="color:#94a3b8;font-size:0.85rem">まだ登録されていません</span>';
+    }
+
+    async function loadAreas() {
+      const res  = await fetch('/master/areas');
+      const data = await res.json();
+      document.getElementById('areaList').innerHTML = data.map(a =>
+        `<span style="background:#f1f5f9;border-radius:20px;padding:0.3rem 0.8rem;font-size:0.85rem;display:flex;align-items:center;gap:0.4rem">
+          ${a.name}
+          <button onclick="deleteMaster('areas',${a.id},loadAreas)" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1rem;line-height:1;padding:0">×</button>
+        </span>`
+      ).join('') || '<span style="color:#94a3b8;font-size:0.85rem">まだ登録されていません</span>';
+    }
+
+    async function addMaster(table, inputId, reloader) {
+      const input = document.getElementById(inputId);
+      const name  = input.value.trim();
+      if (!name) return;
+      const res = await fetch(`/master/${table}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (res.ok) { input.value = ''; reloader(); }
+      else alert(data.error);
+    }
+
+    async function deleteMaster(table, id, reloader) {
+      if (!confirm('削除しますか？')) return;
+      await fetch(`/master/${table}/${id}`, { method: 'DELETE' });
+      reloader();
+    }
+
+    loadGenres();
+    loadAreas();
+
     function openEdit(id, name, email, role) {
       document.getElementById('editId').value    = id;
       document.getElementById('editName').value  = name;
