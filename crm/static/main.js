@@ -186,7 +186,7 @@ function cardHTML(c) {
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
       <span class="follow-badge ${c.status}">${badgeLabel(c.status, c.next_follow_date || '')}</span>
-      ${c.notes ? `<div style="font-size:0.82rem;color:#4b5563">${esc(c.notes)}</div>` : ''}
+      ${c.notes ? `<div style="font-size:0.82rem;color:#4b5563;white-space:pre-wrap">${esc(c.notes)}</div>` : ''}
       ${c.created_by_name ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:0.1rem">登録: ${esc(c.created_by_name)}</div>` : ''}
       <div class="card-actions">
         <button class="btn-follow-card btn-follow" data-id="${c.id}">フォロー記録</button>
@@ -216,7 +216,7 @@ function cardHTMLEnded(c) {
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
       <span class="follow-badge ended-badge">✓ フォロー終了</span>
-      ${c.notes ? `<div style="font-size:0.82rem;color:#94a3b8">${esc(c.notes)}</div>` : ''}
+      ${c.notes ? `<div style="font-size:0.82rem;color:#94a3b8;white-space:pre-wrap">${esc(c.notes)}</div>` : ''}
       <div class="card-actions">
         <button class="btn btn-reopen btn-sm btn-reopen" data-id="${c.id}">🔄 再開</button>
         <button class="btn btn-sm btn-delete" style="background:var(--gray-100);color:var(--gray-400);border:none" data-id="${c.id}">削除</button>
