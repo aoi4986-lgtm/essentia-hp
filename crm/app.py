@@ -656,7 +656,9 @@ def send_email(to_addr, subject, body):
     msg['From']    = GMAIL_USER
     msg['To']      = to_addr
     msg.attach(MIMEText(body, 'html', 'utf-8'))
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+    with smtplib.SMTP('smtp.gmail.com', 587, timeout=15) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
         smtp.login(GMAIL_USER, GMAIL_APP_PW)
         smtp.send_message(msg)
 
