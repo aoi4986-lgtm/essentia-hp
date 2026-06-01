@@ -214,9 +214,16 @@ def admin_required(f):
 @app.route('/')
 @login_required
 def index():
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT name FROM users WHERE is_active = TRUE ORDER BY name ASC")
+    assignee_options = [r['name'] for r in cur.fetchall()]
+    cur.close()
+    conn.close()
     return render_template('index.html',
                            user_name=session.get('user_name', ''),
-                           user_role=session.get('user_role', 'member'))
+                           user_role=session.get('user_role', 'member'),
+                           assignee_options=assignee_options)
 
 
 @app.route('/customers', methods=['GET'])
