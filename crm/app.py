@@ -475,6 +475,20 @@ def admin_toggle_user(uid):
     return jsonify({'ok': True})
 
 
+@app.route('/admin/users/<int:uid>/delete', methods=['POST'])
+@admin_required
+def admin_delete_user(uid):
+    if uid == session.get('user_id'):
+        return jsonify({'error': '自分自身は削除できません'}), 400
+    conn = get_db()
+    cur  = conn.cursor()
+    cur.execute('DELETE FROM users WHERE id=%s', (uid,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 @app.route('/admin/users/<int:uid>/reset-password', methods=['POST'])
 @admin_required
 def admin_reset_password(uid):

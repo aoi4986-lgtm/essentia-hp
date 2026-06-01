@@ -126,6 +126,8 @@
                         onclick="toggleUser({{ u.id }}, {{ 'true' if u.is_active else 'false' }})">
                   {{ '無効化' if u.is_active else '有効化' }}
                 </button>
+                <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5"
+                        onclick="deleteUser({{ u.id }}, '{{ u.name }}')">削除</button>
                 {% endif %}
                 <div class="reset-row">
                   <input type="password" class="reset-input" id="rpw-{{ u.id }}" placeholder="新パスワード">
@@ -169,6 +171,14 @@
   </main>
 
   <script>
+    async function deleteUser(id, name) {
+      if (!confirm(`「${name}」を削除しますか？\nこの操作は取り消せません。`)) return;
+      const res = await fetch(`/admin/users/${id}/delete`, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) location.reload();
+      else alert(data.error);
+    }
+
     async function toggleUser(id, isActive) {
       const res = await fetch(`/admin/users/${id}/toggle`, { method: 'POST' });
       const data = await res.json();
