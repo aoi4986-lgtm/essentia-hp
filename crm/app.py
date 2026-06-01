@@ -662,19 +662,23 @@ def send_email(to_addr, subject, body):
 
 
 @app.route('/notify')
-def notify():
+def notify():  # noqa: C901
     """担当者ごとに期限超過・期限間近の顧客をメール通知する"""
-    token = request.args.get('token', '')
-    if not NOTIFY_TOKEN or token != NOTIFY_TOKEN:
-        return jsonify({'error': 'Unauthorized'}), 401
-    if not GMAIL_USER or not GMAIL_APP_PW:
-        return jsonify({'error': 'Gmail設定がありません'}), 500
+    try:
+        token = request.args.get('token', '')
+        if not NOTIFY_TOKEN or token != NOTIFY_TOKEN:
+            return jsonify({'error': 'Unauthorized'}), 401
+        if not GMAIL_USER or not GMAIL_APP_PW:
+            return jsonify({'error': 'Gmail設定がありません', 'gmail_user': bool(GMAIL_USER), 'gmail_pw': bool(GMAIL_APP_PW)}), 500
+    except Exception as e:
+        return jsonify({'error': f'初期化エラー: {str(e)}'}), 500
 
-    today = date.today()
-    d3    = (today + timedelta(days=3)).isoformat()
-    today_str = today.isoformat()
+    try:
+        today = date.today()
+        d3    = (today + timedelta(days=3)).isoformat()
+        today_str = today.isoformat()
 
-    conn = get_db()
+        conn = get_db()
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # 担当者名とメールアドレスの対応を取得
     cur.execute("SELECT name, email FROM users WHERE is_active = TRUE AND email != ''")
@@ -760,7 +764,9 @@ def notify():
         except Exception as e:
             skipped.append(f'{assignee}({str(e)})')
 
-    return jsonify({'sent': sent, 'skipped': skipped, 'date': today_str})
+        return jsonify({'sent': sent, 'skipped': skipped, 'date': today_str})
+    except Exception as e:
+        return jsonify({'error': f'処理エラー: {str(e)}'}), 500
 
 
 @app.route('/export/csv', methods=['GET'])
