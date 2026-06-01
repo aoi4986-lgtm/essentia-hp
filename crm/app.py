@@ -509,6 +509,92 @@ def change_password():
     return jsonify({'ok': True})
 
 
+@app.route('/stats')
+@login_required
+def stats():
+    return render_template('stats.html',
+                           user_name=session.get('user_name', ''),
+                           user_role=session.get('user_role', 'member'))
+
+
+@app.route('/stats/data')
+@login_required
+def stats_data():
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # 担当者別フォロー件数（今月）
+    cur.execute('''
+        SELECT u.name as assignee, COUNT(*) as count
+        FROM follow_history fh
+        JOIN customers c ON fh.customer_id = c.id
+        LEFT JOIN users u ON c.assignee = u.name
+        WHERE DATE_TRUNC('month', fh.date) = DATE_TRUNC('month', CURRENT_DATE)
+        GROUP BY u.name ORDER BY count DESC
+    ''')
+    monthly_follows = [dict(r) for r in cur.fetchall()]
+
+    # 担当者別フォロー件数（累計）
+    cur.execute('''
+        SELECT COALESCE(c.assignee, '未設定') as assignee, COUNT(*) as count
+        FROM follow_history fh
+        JOIN customers c ON fh.customer_id = c.id
+        GROUP BY c.assignee ORDER BY count DESC LIMIT 10
+    ''')
+    total_follows = [dict(r) for r in cur.fetchall()]
+
+    # ジャンル別顧客数
+    cur.execute('''
+        SELECT COALESCE(genre, '未設定') as genre, COUNT(*) as count
+        FROM customers WHERE status != 'ended'
+        GROUP BY genre ORDER BY count DESC
+    ''')
+    by_genre = [dict(r) for r in cur.fetchall()]
+
+    # エリア別顧客数
+    cur.execute('''
+        SELECT COALESCE(area, '未設定') as area, COUNT(*) as count
+        FROM customers WHERE status != 'ended'
+        GROUP BY area ORDER BY count DESC
+    ''')
+    by_area = [dict(r) for r in cur.fetchall()]
+
+    # 月別フォロー記録数（過去6ヶ月）
+    cur.execute('''
+        SELECT TO_CHAR(DATE_TRUNC('month', date), 'YYYY-MM') as month, COUNT(*) as count
+        FROM follow_history
+        WHERE date >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY month ORDER BY month ASC
+    ''')
+    monthly_trend = [dict(r) for r in cur.fetchall()]
+
+    # サマリー数値
+    cur.execute("SELECT COUNT(*) FROM customers WHERE status != 'ended'")
+    total_active = cur.fetchone()['count']
+    cur.execute("SELECT COUNT(*) FROM customers WHERE status = 'ended'")
+    total_ended = cur.fetchone()['count']
+    cur.execute("SELECT COUNT(*) FROM follow_history WHERE DATE_TRUNC('month', date) = DATE_TRUNC('month', CURRENT_DATE)")
+    follows_this_month = cur.fetchone()['count']
+    cur.execute("SELECT COUNT(*) FROM customers WHERE next_follow_date < CURRENT_DATE AND status != 'ended'")
+    overdue_count = cur.fetchone()['count']
+
+    cur.close()
+    conn.close()
+    return jsonify({
+        'monthly_follows': monthly_follows,
+        'total_follows': total_follows,
+        'by_genre': by_genre,
+        'by_area': by_area,
+        'monthly_trend': monthly_trend,
+        'summary': {
+            'total_active': total_active,
+            'total_ended': total_ended,
+            'follows_this_month': follows_this_month,
+            'overdue_count': overdue_count,
+        }
+    })
+
+
 @app.route('/export/csv', methods=['GET'])
 @login_required
 def export_csv():

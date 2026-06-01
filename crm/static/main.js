@@ -4,6 +4,7 @@ let currentTab = 'list'; // 'list' | 'ended' | 'calendar'
 let searchQuery = '';
 let currentArea = '';
 let currentGenre = '';
+let currentAssignee = '';
 let currentStatusFilter = ''; // 'overdue' | 'u3' | 'u14' | 'u30' | ''
 
 // --- DOM refs ---
@@ -37,6 +38,7 @@ async function loadCustomers() {
   const res = await fetch(`${API}/customers`);
   customers = await res.json();
   renderSummary();
+  renderAssigneeFilter();
   renderGrid();
 }
 
@@ -98,12 +100,38 @@ function renderSummary() {
   });
 }
 
+// --- 担当者フィルター生成 ---
+function renderAssigneeFilter() {
+  const wrap = document.getElementById('assigneeFilter');
+  const active = customers.filter(c => c.account_status !== 'ended');
+  const assignees = [...new Set(active.map(c => c.assignee).filter(Boolean))].sort();
+  let html = `<button class="area-btn ${currentAssignee === '' ? 'active' : ''}" data-assignee="">すべて</button>`;
+  if (CURRENT_USER.name) {
+    html += `<button class="area-btn ${currentAssignee === CURRENT_USER.name ? 'active' : ''}" data-assignee="${esc(CURRENT_USER.name)}">🙋 自分</button>`;
+  }
+  assignees.filter(a => a !== CURRENT_USER.name).forEach(a => {
+    html += `<button class="area-btn ${currentAssignee === a ? 'active' : ''}" data-assignee="${esc(a)}">${esc(a)}</button>`;
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.area-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentAssignee = btn.dataset.assignee;
+      renderAssigneeFilter();
+      if (currentTab !== 'calendar') renderGrid();
+    });
+  });
+}
+
 // --- Grid ---
 function renderGrid() {
   const isEnded = currentTab === 'ended';
   let list = customers.filter(c =>
     isEnded ? c.account_status === 'ended' : c.account_status !== 'ended'
   );
+
+  if (currentAssignee) {
+    list = list.filter(c => c.assignee === currentAssignee);
+  }
 
   if (currentStatusFilter) {
     const now = new Date();

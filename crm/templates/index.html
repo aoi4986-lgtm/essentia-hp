@@ -18,6 +18,7 @@
       <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
         <span style="color:rgba(255,255,255,0.85);font-size:0.85rem;font-weight:500">👤 {{ user_name }}</span>
         <button class="btn btn-primary" id="btnAdd">＋ 顧客を追加</button>
+        <a href="/stats" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">📊 統計</a>
         <a href="/export/csv" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">📥 CSV出力</a>
         {% if user_role == 'admin' %}
         <a href="/admin/users" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">⚙ ユーザー管理</a>
@@ -62,6 +63,9 @@
     <div class="search-bar-wrap">
       <input type="text" id="searchInput" class="search-bar" placeholder="🔍 顧客名・会社名・担当者で検索...">
     </div>
+
+    <!-- 担当者フィルター -->
+    <div class="area-filter" id="assigneeFilter"></div>
 
     <!-- ジャンルフィルター -->
     <div class="area-filter" id="genreFilter">

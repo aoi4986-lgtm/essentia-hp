@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>統計 — 顧客フォロー管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #059669; --blue: #0ea5e9; --orange: #f59e0b; --red: #ef4444;
+      --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-400: #94a3b8;
+      --gray-600: #475569; --gray-800: #1e293b; --radius: 14px;
+      --shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    body { font-family: 'Noto Sans JP', sans-serif; background: var(--gray-100); color: var(--gray-800); min-height: 100vh; }
+    .header {
+      background: linear-gradient(135deg, #059669 0%, #0ea5e9 100%);
+      color: #fff; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(5,150,105,0.3);
+    }
+    .header-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 1.5rem;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 1rem; font-weight: 800; letter-spacing: 0.04em; }
+    .btn { padding: 0.45rem 1.1rem; border: none; border-radius: 8px; font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-block; }
+    .btn-ghost { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.28); }
+    .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .summary-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .kpi-card {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.2rem 1.5rem; border-top: 4px solid var(--gray-200);
+      display: flex; flex-direction: column; gap: 0.2rem;
+    }
+    .kpi-card.green { border-top-color: var(--green); }
+    .kpi-card.blue { border-top-color: var(--blue); }
+    .kpi-card.orange { border-top-color: var(--orange); }
+    .kpi-card.red { border-top-color: var(--red); }
+    .kpi-label { font-size: 0.78rem; color: var(--gray-400); font-weight: 600; }
+    .kpi-value { font-size: 2.2rem; font-weight: 800; }
+    .kpi-card.green .kpi-value { color: var(--green); }
+    .kpi-card.blue .kpi-value { color: var(--blue); }
+    .kpi-card.orange .kpi-value { color: var(--orange); }
+    .kpi-card.red .kpi-value { color: var(--red); }
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .chart-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem; }
+    .chart-card.wide { grid-column: 1 / -1; }
+    .chart-title { font-size: 0.9rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1rem; }
+    .chart-wrap { position: relative; height: 260px; }
+    @media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } .chart-card.wide { grid-column: 1; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <span class="logo">📊 統計</span>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <span style="color:rgba(255,255,255,0.85);font-size:0.85rem">👤 {{ user_name }}</span>
+        <a href="/" class="btn btn-ghost">← 一覧へ戻る</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="summary-row" id="kpiRow">
+      <div class="kpi-card green"><div class="kpi-label">アクティブ顧客</div><div class="kpi-value" id="kpiActive">-</div></div>
+      <div class="kpi-card blue"><div class="kpi-label">今月のフォロー数</div><div class="kpi-value" id="kpiMonthly">-</div></div>
+      <div class="kpi-card red"><div class="kpi-label">期限超過</div><div class="kpi-value" id="kpiOverdue">-</div></div>
+      <div class="kpi-card orange"><div class="kpi-label">終了済み顧客</div><div class="kpi-value" id="kpiEnded">-</div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card wide">
+        <div class="chart-title">📈 月別フォロー記録数（過去6ヶ月）</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">👤 担当者別フォロー数（今月）</div>
+        <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">👤 担当者別フォロー数（累計）</div>
+        <div class="chart-wrap"><canvas id="totalChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🏷 ジャンル別顧客数</div>
+        <div class="chart-wrap"><canvas id="genreChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📍 エリア別顧客数</div>
+        <div class="chart-wrap"><canvas id="areaChart"></canvas></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const COLORS = ['#059669','#0ea5e9','#f59e0b','#8b5cf6','#ef4444','#10b981','#3b82f6','#f97316'];
+
+    function makeBar(id, labels, data, label) {
+      new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: { labels, datasets: [{ label, data, backgroundColor: COLORS.slice(0, data.length), borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+      });
+    }
+
+    function makeDoughnut(id, labels, data) {
+      new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: COLORS.slice(0, data.length), borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { family: 'Noto Sans JP' } } } } }
+      });
+    }
+
+    async function loadStats() {
+      const res  = await fetch('/stats/data');
+      const data = await res.json();
+
+      // KPI
+      document.getElementById('kpiActive').textContent   = data.summary.total_active;
+      document.getElementById('kpiMonthly').textContent  = data.summary.follows_this_month;
+      document.getElementById('kpiOverdue').textContent  = data.summary.overdue_count;
+      document.getElementById('kpiEnded').textContent    = data.summary.total_ended;
+
+      // 月別トレンド
+      makeBar('trendChart',
+        data.monthly_trend.map(r => r.month),
+        data.monthly_trend.map(r => r.count),
+        'フォロー数'
+      );
+
+      // 担当者別（今月）
+      makeBar('monthlyChart',
+        data.monthly_follows.map(r => r.assignee || '未設定'),
+        data.monthly_follows.map(r => r.count),
+        '今月'
+      );
+
+      // 担当者別（累計）
+      makeBar('totalChart',
+        data.total_follows.map(r => r.assignee || '未設定'),
+        data.total_follows.map(r => r.count),
+        '累計'
+      );
+
+      // ジャンル
+      makeDoughnut('genreChart',
+        data.by_genre.map(r => r.genre),
+        data.by_genre.map(r => r.count)
+      );
+
+      // エリア
+      makeDoughnut('areaChart',
+        data.by_area.map(r => r.area),
+        data.by_area.map(r => r.count)
+      );
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>
