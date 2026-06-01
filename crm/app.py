@@ -475,6 +475,33 @@ def admin_toggle_user(uid):
     return jsonify({'ok': True})
 
 
+@app.route('/admin/users/<int:uid>', methods=['PUT'])
+@admin_required
+def admin_update_user(uid):
+    data  = request.json or {}
+    name  = sanitize(data.get('name'), 100)
+    email = sanitize(data.get('email'), 200)
+    role  = data.get('role', 'member')
+    if not name or not email:
+        return jsonify({'error': '名前とメールは必須です'}), 400
+    if role not in ('admin', 'member'):
+        role = 'member'
+    conn = get_db()
+    cur  = conn.cursor()
+    try:
+        cur.execute('UPDATE users SET name=%s, email=%s, role=%s WHERE id=%s',
+                    (name, email.lower(), role, uid))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({'error': 'そのメールアドレスはすでに使われています'}), 409
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 @app.route('/admin/users/<int:uid>/delete', methods=['POST'])
 @admin_required
 def admin_delete_user(uid):
