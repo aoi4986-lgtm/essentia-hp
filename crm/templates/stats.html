@@ -132,10 +132,42 @@
       const res  = await fetch('/stats/data');
       const data = await res.json();
 
-      // KPI
+      // KPI設定を取得して色分け
+      const kpi = data.kpi || {};
+      const overdue  = data.summary.overdue_count;
+      const follows  = data.summary.follows_this_month;
+      const newCount = data.new_customers.reduce((s, r) => s + r.count, 0);
+
+      // 期限超過カードの色分け
+      const overdueCard = document.querySelector('.kpi-card.red');
+      if (kpi.overdue_danger && overdue >= kpi.overdue_danger) {
+        overdueCard.style.borderTopColor = '#ef4444';
+        overdueCard.querySelector('.kpi-value').style.color = '#ef4444';
+        overdueCard.querySelector('.kpi-label').textContent = `期限超過 🔴 危険（${kpi.overdue_danger}件以上）`;
+      } else if (kpi.overdue_warning && overdue >= kpi.overdue_warning) {
+        overdueCard.style.borderTopColor = '#f59e0b';
+        overdueCard.querySelector('.kpi-value').style.color = '#f59e0b';
+        overdueCard.querySelector('.kpi-label').textContent = `期限超過 🟡 注意（${kpi.overdue_warning}件以上）`;
+      } else {
+        overdueCard.style.borderTopColor = '#059669';
+        overdueCard.querySelector('.kpi-value').style.color = '#059669';
+        overdueCard.querySelector('.kpi-label').textContent = '期限超過 🟢 良好';
+      }
+
+      // 今月フォローカードの色分け
+      const followCard = document.querySelector('.kpi-card.blue');
+      const followTarget = kpi.monthly_follows_target || 0;
+      if (followTarget && follows >= followTarget) {
+        followCard.querySelector('.kpi-label').textContent = `今月フォロー数 🟢 目標達成（目標${followTarget}件）`;
+      } else if (followTarget) {
+        followCard.querySelector('.kpi-label').textContent = `今月フォロー数 🟡 目標${followTarget}件まであと${followTarget - follows}件`;
+      }
+
+      // 新規登録カードを追加表示
+      const newTarget = kpi.monthly_new_target || 0;
       document.getElementById('kpiActive').textContent   = data.summary.total_active;
-      document.getElementById('kpiMonthly').textContent  = data.summary.follows_this_month;
-      document.getElementById('kpiOverdue').textContent  = data.summary.overdue_count;
+      document.getElementById('kpiMonthly').textContent  = follows;
+      document.getElementById('kpiOverdue').textContent  = overdue;
       document.getElementById('kpiEnded').textContent    = data.summary.total_ended;
 
       // 月別トレンド
@@ -171,20 +203,32 @@
         data.by_area.map(r => r.count)
       );
 
-      // 期限超過の週次推移
+      // 期限超過の週次推移（目標ライン付き）
       new Chart(document.getElementById('overdueChart'), {
         type: 'line',
         data: {
           labels: data.overdue_trend.map(r => r.week + '週'),
-          datasets: [{
-            label: '期限超過件数',
-            data: data.overdue_trend.map(r => r.overdue),
-            borderColor: '#ef4444',
-            backgroundColor: 'rgba(239,68,68,0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-          }]
+          datasets: [
+            {
+              label: '期限超過件数',
+              data: data.overdue_trend.map(r => r.overdue),
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239,68,68,0.1)',
+              fill: true, tension: 0.3, pointRadius: 5,
+            },
+            kpi.overdue_warning ? {
+              label: `注意ライン（${kpi.overdue_warning}件）`,
+              data: data.overdue_trend.map(() => kpi.overdue_warning),
+              borderColor: '#f59e0b', borderDash: [6, 3],
+              borderWidth: 2, pointRadius: 0, fill: false,
+            } : null,
+            kpi.overdue_danger ? {
+              label: `危険ライン（${kpi.overdue_danger}件）`,
+              data: data.overdue_trend.map(() => kpi.overdue_danger),
+              borderColor: '#dc2626', borderDash: [6, 3],
+              borderWidth: 2, pointRadius: 0, fill: false,
+            } : null,
+          ].filter(Boolean)
         },
         options: {
           responsive: true, maintainAspectRatio: false,

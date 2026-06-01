@@ -143,6 +143,31 @@
       </table>
     </div>
 
+    <!-- KPI目標設定 -->
+    <div class="card">
+      <h2>🎯 KPI目標設定</h2>
+      <div class="form-grid" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label>期限超過：注意ライン（件以上で🟡）</label>
+          <input type="number" id="kpi_overdue_warning" min="0" placeholder="例: 2">
+        </div>
+        <div class="form-group">
+          <label>期限超過：危険ライン（件以上で🔴）</label>
+          <input type="number" id="kpi_overdue_danger" min="0" placeholder="例: 5">
+        </div>
+        <div class="form-group">
+          <label>今月フォロー目標（件）</label>
+          <input type="number" id="kpi_monthly_follows_target" min="1" placeholder="例: 20">
+        </div>
+        <div class="form-group">
+          <label>今月新規登録目標（件）</label>
+          <input type="number" id="kpi_monthly_new_target" min="1" placeholder="例: 5">
+        </div>
+      </div>
+      <button class="btn-primary-grad" onclick="saveKpi()">保存する</button>
+      <div class="msg" id="kpiMsg"></div>
+    </div>
+
     <!-- ジャンル管理 -->
     <div class="card">
       <h2>🏷 ジャンル管理</h2>
@@ -262,6 +287,34 @@
       reloader();
     }
 
+    async function loadKpi() {
+      const res  = await fetch('/kpi-settings');
+      const data = await res.json();
+      if (data.overdue_warning)         document.getElementById('kpi_overdue_warning').value         = data.overdue_warning.value;
+      if (data.overdue_danger)          document.getElementById('kpi_overdue_danger').value          = data.overdue_danger.value;
+      if (data.monthly_follows_target)  document.getElementById('kpi_monthly_follows_target').value  = data.monthly_follows_target.value;
+      if (data.monthly_new_target)      document.getElementById('kpi_monthly_new_target').value      = data.monthly_new_target.value;
+    }
+
+    async function saveKpi() {
+      const msg = document.getElementById('kpiMsg');
+      msg.className = 'msg';
+      const payload = {
+        overdue_warning:        document.getElementById('kpi_overdue_warning').value,
+        overdue_danger:         document.getElementById('kpi_overdue_danger').value,
+        monthly_follows_target: document.getElementById('kpi_monthly_follows_target').value,
+        monthly_new_target:     document.getElementById('kpi_monthly_new_target').value,
+      };
+      const res  = await fetch('/kpi-settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.ok) { msg.className = 'msg ok'; msg.textContent = '保存しました！'; }
+      else { msg.className = 'msg err'; msg.textContent = 'エラーが発生しました'; }
+    }
+
+    loadKpi();
     loadGenres();
     loadAreas();
 

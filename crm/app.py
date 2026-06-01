@@ -125,6 +125,25 @@ def init_db():
     if cur.fetchone()[0] == 0:
         for i, a in enumerate(['大阪府', '兵庫県', '京都府', '奈良県', '滋賀県', '和歌山県']):
             cur.execute('INSERT INTO areas (name, sort_order) VALUES (%s, %s)', (a, i))
+    # KPI目標設定テーブル
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS kpi_settings (
+            key TEXT PRIMARY KEY,
+            value INTEGER NOT NULL,
+            label TEXT
+        )
+    ''')
+    defaults = [
+        ('overdue_danger',         5,  '期限超過：危険ライン（件）'),
+        ('overdue_warning',        2,  '期限超過：注意ライン（件）'),
+        ('monthly_follows_target', 20, '今月フォロー目標（件）'),
+        ('monthly_new_target',     5,  '今月新規登録目標（件）'),
+    ]
+    for key, val, label in defaults:
+        cur.execute(
+            'INSERT INTO kpi_settings (key, value, label) VALUES (%s, %s, %s) ON CONFLICT (key) DO NOTHING',
+            (key, val, label)
+        )
     # 変更履歴テーブル
     cur.execute('''
         CREATE TABLE IF NOT EXISTS activity_log (
@@ -519,6 +538,38 @@ def master_delete(table, mid):
     return jsonify({'ok': True})
 
 
+@app.route('/kpi-settings', methods=['GET'])
+@login_required
+def get_kpi_settings():
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT * FROM kpi_settings ORDER BY key')
+    rows = {r['key']: dict(r) for r in cur.fetchall()}
+    cur.close()
+    conn.close()
+    return jsonify(rows)
+
+
+@app.route('/kpi-settings', methods=['POST'])
+@admin_required
+def update_kpi_settings():
+    data = request.json or {}
+    conn = get_db()
+    cur  = conn.cursor()
+    for key, val in data.items():
+        try:
+            cur.execute(
+                'UPDATE kpi_settings SET value=%s WHERE key=%s',
+                (int(val), key)
+            )
+        except (ValueError, TypeError):
+            pass
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 @app.route('/customers/<int:cid>/activity')
 @login_required
 def get_activity(cid):
@@ -802,9 +853,14 @@ def stats_data():
     ''')
     overdue_trend = [dict(r) for r in cur.fetchall()]
 
+    # KPI設定
+    cur.execute('SELECT key, value FROM kpi_settings')
+    kpi = {r['key']: r['value'] for r in cur.fetchall()}
+
     cur.close()
     conn.close()
     return jsonify({
+        'kpi': kpi,
         'monthly_follows': monthly_follows,
         'total_follows': total_follows,
         'by_genre': by_genre,
