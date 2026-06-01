@@ -398,6 +398,7 @@ async function openFollowModal(id) {
   document.querySelectorAll('#modalBackdrop .btn-expect').forEach(b => b.classList.remove('selected'));
   modalBackdrop.classList.add('open');
   await loadHistory(id);
+  await loadActivity(id);
 }
 
 function expectLabel(exp) {
@@ -424,6 +425,20 @@ async function loadHistory(id) {
       </div>
     `;
   }).join('');
+}
+
+async function loadActivity(id) {
+  const res  = await fetch(`${API}/customers/${id}/activity`);
+  const logs = await res.json();
+  const el   = document.getElementById('activityList');
+  if (logs.length === 0) { el.innerHTML = '<div class="history-empty">ログはありません</div>'; return; }
+  const actionIcon = a => ({'登録':'✅','編集':'✏️','フォロー記録':'📝','終了':'⏹','再開':'🔄'}[a] || '•');
+  el.innerHTML = logs.map(l => `
+    <div class="history-item" style="border-left-color:#94a3b8">
+      <div class="h-date" style="color:#64748b">${actionIcon(l.action)} ${esc(l.action)} — ${esc(l.user_name || '不明')} <span style="font-weight:400;color:#94a3b8">${l.created_at.slice(0,16).replace('T',' ')}</span></div>
+      ${l.detail ? `<div class="h-memo" style="color:#64748b">${esc(l.detail)}</div>` : ''}
+    </div>
+  `).join('');
 }
 
 document.getElementById('btnFollowSave').addEventListener('click', async () => {

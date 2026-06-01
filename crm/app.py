@@ -101,6 +101,18 @@ def init_db():
         )
     ''')
     cur.execute("ALTER TABLE follow_history ADD COLUMN IF NOT EXISTS expectation TEXT")
+    # 変更履歴テーブル
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id SERIAL PRIMARY KEY,
+            customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            user_name TEXT,
+            action TEXT NOT NULL,
+            detail TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.commit()
     cur.close()
     conn.close()
@@ -117,6 +129,15 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
+
+
+def log_activity(cur, customer_id, action, detail=None):
+    user_id   = session.get('user_id')
+    user_name = session.get('user_name', '不明')
+    cur.execute(
+        'INSERT INTO activity_log (customer_id, user_id, user_name, action, detail) VALUES (%s, %s, %s, %s, %s)',
+        (customer_id, user_id, user_name, action, detail)
+    )
 
 
 def sanitize(value, max_len=MAX_TEXT_LEN):
@@ -285,6 +306,7 @@ def add_customer():
              session.get('user_id'))
         )
         new_id = cur.fetchone()[0]
+        log_activity(cur, new_id, '登録', sanitize(data.get('name')))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -317,6 +339,7 @@ def update_customer(cid):
              validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
              session.get('user_id'), cid)
         )
+        log_activity(cur, cid, '編集', name)
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -359,6 +382,7 @@ def add_follow(cid):
             'UPDATE customers SET next_follow_date=%s WHERE id=%s',
             (next_date, cid)
         )
+    log_activity(cur, cid, 'フォロー記録', sanitize(data.get('memo')))
     conn.commit()
     cur.close()
     conn.close()
@@ -375,6 +399,7 @@ def end_customer(cid):
         'INSERT INTO follow_history (customer_id, date, memo, expectation) VALUES (%s, %s, %s, %s)',
         (cid, date.today().isoformat(), 'フォロー終了', 'ended')
     )
+    log_activity(cur, cid, '終了')
     conn.commit()
     cur.close()
     conn.close()
@@ -387,6 +412,7 @@ def reopen_customer(cid):
     conn = get_db()
     cur = conn.cursor()
     cur.execute("UPDATE customers SET status='active' WHERE id=%s", (cid,))
+    log_activity(cur, cid, '再開')
     conn.commit()
     cur.close()
     conn.close()
@@ -410,6 +436,27 @@ def get_history(cid):
         d = dict(r)
         if d.get('date'):
             d['date'] = d['date'].isoformat()
+        if d.get('created_at'):
+            d['created_at'] = d['created_at'].isoformat()
+        result.append(d)
+    return jsonify(result)
+
+
+@app.route('/customers/<int:cid>/activity')
+@login_required
+def get_activity(cid):
+    conn = get_db()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        'SELECT * FROM activity_log WHERE customer_id=%s ORDER BY created_at DESC LIMIT 20',
+        (cid,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    result = []
+    for r in rows:
+        d = dict(r)
         if d.get('created_at'):
             d['created_at'] = d['created_at'].isoformat()
         result.append(d)
