@@ -94,6 +94,18 @@
         <div class="chart-title">📍 エリア別顧客数</div>
         <div class="chart-wrap"><canvas id="areaChart"></canvas></div>
       </div>
+      <div class="chart-card wide">
+        <div class="chart-title">⚠️ 期限超過数の週次推移（過去8週）</div>
+        <div class="chart-wrap"><canvas id="overdueChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🆕 今月の新規登録（担当者別）</div>
+        <div class="chart-wrap"><canvas id="newCustomersChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">✅ フォロー完了率（今後4週の期限別）</div>
+        <div class="chart-wrap"><canvas id="completionChart"></canvas></div>
+      </div>
     </div>
   </main>
 
@@ -158,6 +170,52 @@
         data.by_area.map(r => r.area),
         data.by_area.map(r => r.count)
       );
+
+      // 期限超過の週次推移
+      new Chart(document.getElementById('overdueChart'), {
+        type: 'line',
+        data: {
+          labels: data.overdue_trend.map(r => r.week + '週'),
+          datasets: [{
+            label: '期限超過件数',
+            data: data.overdue_trend.map(r => r.overdue),
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239,68,68,0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+
+      // 今月の新規登録（担当者別）
+      makeBar('newCustomersChart',
+        data.new_customers.map(r => r.assignee),
+        data.new_customers.map(r => r.count),
+        '新規登録数'
+      );
+
+      // フォロー完了率
+      new Chart(document.getElementById('completionChart'), {
+        type: 'bar',
+        data: {
+          labels: data.completion_by_week.map(r => r.week + '週'),
+          datasets: [
+            { label: '期限内', data: data.completion_by_week.map(r => r.total - r.overdue), backgroundColor: '#059669', borderRadius: 4 },
+            { label: '超過', data: data.completion_by_week.map(r => r.overdue), backgroundColor: '#ef4444', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
     }
 
     loadStats();

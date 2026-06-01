@@ -757,6 +757,51 @@ def stats_data():
     cur.execute("SELECT COUNT(*) FROM customers WHERE next_follow_date < CURRENT_DATE AND status != 'ended'")
     overdue_count = cur.fetchone()['count']
 
+    # 今月の新規登録数（担当者別）
+    cur.execute('''
+        SELECT COALESCE(assignee, '未設定') as assignee, COUNT(*) as count
+        FROM customers
+        WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+          AND status != 'ended'
+        GROUP BY assignee ORDER BY count DESC
+    ''')
+    new_customers = [dict(r) for r in cur.fetchall()]
+
+    # フォロー完了率（過去4週・週ごと）
+    # 各週の期限超過数と総フォロー対象数
+    cur.execute('''
+        SELECT
+            TO_CHAR(DATE_TRUNC('week', next_follow_date), 'MM/DD') as week,
+            COUNT(*) FILTER (WHERE next_follow_date < CURRENT_DATE) as overdue,
+            COUNT(*) as total
+        FROM customers
+        WHERE status != 'ended'
+          AND next_follow_date IS NOT NULL
+          AND next_follow_date >= CURRENT_DATE - INTERVAL '4 weeks'
+        GROUP BY DATE_TRUNC('week', next_follow_date)
+        ORDER BY DATE_TRUNC('week', next_follow_date) ASC
+    ''')
+    completion_by_week = [dict(r) for r in cur.fetchall()]
+
+    # 期限超過数の週次推移（過去8週）
+    cur.execute('''
+        SELECT
+            TO_CHAR(week, 'MM/DD') as week,
+            COUNT(c.id) as overdue
+        FROM generate_series(
+            DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '7 weeks',
+            DATE_TRUNC('week', CURRENT_DATE),
+            '1 week'::interval
+        ) AS week
+        LEFT JOIN customers c
+            ON c.next_follow_date >= week
+            AND c.next_follow_date < week + INTERVAL '1 week'
+            AND c.next_follow_date < CURRENT_DATE
+            AND c.status != 'ended'
+        GROUP BY week ORDER BY week ASC
+    ''')
+    overdue_trend = [dict(r) for r in cur.fetchall()]
+
     cur.close()
     conn.close()
     return jsonify({
@@ -765,6 +810,9 @@ def stats_data():
         'by_genre': by_genre,
         'by_area': by_area,
         'monthly_trend': monthly_trend,
+        'new_customers': new_customers,
+        'completion_by_week': completion_by_week,
+        'overdue_trend': overdue_trend,
         'summary': {
             'total_active': total_active,
             'total_ended': total_ended,
