@@ -28,30 +28,81 @@
     .logo { font-size: 1rem; font-weight: 800; letter-spacing: 0.04em; }
     .btn { padding: 0.45rem 1.1rem; border: none; border-radius: 8px; font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s; text-decoration: none; display: inline-block; }
     .btn-ghost { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
-    .btn-ghost:hover { background: rgba(255,255,255,0.28); }
-    .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .summary-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-    .kpi-card {
-      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 1.2rem 1.5rem; border-top: 4px solid var(--gray-200);
-      display: flex; flex-direction: column; gap: 0.2rem;
+    .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+
+    /* セクションタイトル */
+    .section-title {
+      font-size: 0.75rem; font-weight: 800; color: var(--gray-400);
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.8rem;
     }
-    .kpi-card.green { border-top-color: var(--green); }
-    .kpi-card.blue { border-top-color: var(--blue); }
-    .kpi-card.orange { border-top-color: var(--orange); }
-    .kpi-card.red { border-top-color: var(--red); }
-    .kpi-label { font-size: 0.78rem; color: var(--gray-400); font-weight: 600; }
-    .kpi-value { font-size: 2.2rem; font-weight: 800; }
-    .kpi-card.green .kpi-value { color: var(--green); }
-    .kpi-card.blue .kpi-value { color: var(--blue); }
-    .kpi-card.orange .kpi-value { color: var(--orange); }
-    .kpi-card.red .kpi-value { color: var(--red); }
+
+    /* ━━ 目標KPIカード ━━ */
+    .kpi-target-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .kpi-target-card {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1.4rem 1.6rem; border-left: 6px solid var(--gray-200);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .kpi-target-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .kpi-target-card.good  { border-left-color: var(--green); }
+    .kpi-target-card.warn  { border-left-color: var(--orange); }
+    .kpi-target-card.danger { border-left-color: var(--red); }
+    .kpi-target-card.neutral { border-left-color: var(--blue); }
+    .kpi-target-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .kpi-target-label { font-size: 0.82rem; font-weight: 700; color: var(--gray-600); }
+    .kpi-status-badge {
+      font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+    .kpi-status-badge.good   { background: #d1fae5; color: #065f46; }
+    .kpi-status-badge.warn   { background: #fef3c7; color: #92400e; }
+    .kpi-status-badge.danger { background: #fee2e2; color: #991b1b; }
+    .kpi-status-badge.neutral { background: #dbeafe; color: #1e40af; }
+    .kpi-target-numbers { display: flex; align-items: baseline; gap: 0.5rem; }
+    .kpi-target-current { font-size: 2.8rem; font-weight: 800; line-height: 1; }
+    .kpi-target-card.good   .kpi-target-current { color: var(--green); }
+    .kpi-target-card.warn   .kpi-target-current { color: var(--orange); }
+    .kpi-target-card.danger .kpi-target-current { color: var(--red); }
+    .kpi-target-card.neutral .kpi-target-current { color: var(--blue); }
+    .kpi-target-unit { font-size: 0.9rem; color: var(--gray-400); font-weight: 500; }
+    .kpi-target-bar-wrap { margin-top: 0.8rem; }
+    .kpi-target-bar-bg { background: var(--gray-200); border-radius: 4px; height: 6px; overflow: hidden; }
+    .kpi-target-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .kpi-target-bar-fill.good   { background: var(--green); }
+    .kpi-target-bar-fill.warn   { background: var(--orange); }
+    .kpi-target-bar-fill.danger { background: var(--red); }
+    .kpi-target-bar-fill.neutral { background: var(--blue); }
+    .kpi-target-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.4rem; }
+
+    /* ━━ サマリー小カード ━━ */
+    .summary-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.8rem;
+    }
+    .summary-mini {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 1rem 1.2rem;
+    }
+    .summary-mini-label { font-size: 0.75rem; color: var(--gray-400); font-weight: 600; }
+    .summary-mini-value { font-size: 1.8rem; font-weight: 800; color: var(--gray-800); }
+
+    /* ━━ グラフ ━━ */
     .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     .chart-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem; }
     .chart-card.wide { grid-column: 1 / -1; }
     .chart-title { font-size: 0.9rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1rem; }
-    .chart-wrap { position: relative; height: 260px; }
-    @media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } .chart-card.wide { grid-column: 1; } }
+    .chart-wrap { position: relative; height: 240px; }
+
+    @media (max-width: 700px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .chart-card.wide { grid-column: 1; }
+      .kpi-target-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -60,53 +111,86 @@
       <span class="logo">📊 統計</span>
       <div style="display:flex;gap:0.6rem;align-items:center">
         <span style="color:rgba(255,255,255,0.85);font-size:0.85rem">👤 {{ user_name }}</span>
+        <a href="/admin/users" class="btn btn-ghost">⚙ 目標設定</a>
         <a href="/" class="btn btn-ghost">← 一覧へ戻る</a>
       </div>
     </div>
   </header>
 
   <main class="main">
-    <div class="summary-row" id="kpiRow">
-      <div class="kpi-card green"><div class="kpi-label">アクティブ顧客</div><div class="kpi-value" id="kpiActive">-</div></div>
-      <div class="kpi-card blue"><div class="kpi-label">今月のフォロー数</div><div class="kpi-value" id="kpiMonthly">-</div></div>
-      <div class="kpi-card red"><div class="kpi-label">期限超過</div><div class="kpi-value" id="kpiOverdue">-</div></div>
-      <div class="kpi-card orange"><div class="kpi-label">終了済み顧客</div><div class="kpi-value" id="kpiEnded">-</div></div>
+
+    <!-- ① 目標KPI -->
+    <div>
+      <div class="section-title">🎯 目標 vs 実績（今月）</div>
+      <div class="kpi-target-grid" id="kpiTargetGrid">
+        <!-- JS で生成 -->
+      </div>
     </div>
 
-    <div class="charts-grid">
-      <div class="chart-card wide">
-        <div class="chart-title">📈 月別フォロー記録数（過去6ヶ月）</div>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">👤 担当者別フォロー数（今月）</div>
-        <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">👤 担当者別フォロー数（累計）</div>
-        <div class="chart-wrap"><canvas id="totalChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">🏷 ジャンル別顧客数</div>
-        <div class="chart-wrap"><canvas id="genreChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">📍 エリア別顧客数</div>
-        <div class="chart-wrap"><canvas id="areaChart"></canvas></div>
-      </div>
-      <div class="chart-card wide">
-        <div class="chart-title">⚠️ 期限超過数の週次推移（過去8週）</div>
-        <div class="chart-wrap"><canvas id="overdueChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">🆕 今月の新規登録（担当者別）</div>
-        <div class="chart-wrap"><canvas id="newCustomersChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">✅ フォロー完了率（今後4週の期限別）</div>
-        <div class="chart-wrap"><canvas id="completionChart"></canvas></div>
+    <!-- ② サマリー -->
+    <div>
+      <div class="section-title">📋 全体サマリー</div>
+      <div class="summary-mini-grid">
+        <div class="summary-mini"><div class="summary-mini-label">アクティブ顧客</div><div class="summary-mini-value" id="kpiActive">-</div></div>
+        <div class="summary-mini"><div class="summary-mini-label">終了済み顧客</div><div class="summary-mini-value" id="kpiEnded">-</div></div>
+        <div class="summary-mini"><div class="summary-mini-label">フォロー日未設定</div><div class="summary-mini-value" id="kpiNoDate">-</div></div>
+        <div class="summary-mini"><div class="summary-mini-label">今月フォロー累計</div><div class="summary-mini-value" id="kpiMonthly">-</div></div>
       </div>
     </div>
+
+    <!-- ③ 重要グラフ -->
+    <div>
+      <div class="section-title">📈 トレンド</div>
+      <div class="charts-grid">
+        <div class="chart-card wide">
+          <div class="chart-title">⚠️ 期限超過数の週次推移（注意・危険ライン付き）</div>
+          <div class="chart-wrap"><canvas id="overdueChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">✅ フォロー完了率（期限内 vs 超過）</div>
+          <div class="chart-wrap"><canvas id="completionChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📈 月別フォロー記録数（過去6ヶ月）</div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 担当者別 -->
+    <div>
+      <div class="section-title">👤 担当者別</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">🆕 今月の新規登録数</div>
+          <div class="chart-wrap"><canvas id="newCustomersChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📝 今月のフォロー記録数</div>
+          <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+        <div class="chart-card wide">
+          <div class="chart-title">📊 累計フォロー記録数</div>
+          <div class="chart-wrap"><canvas id="totalChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 顧客内訳 -->
+    <div>
+      <div class="section-title">🗂 顧客内訳</div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">🏷 ジャンル別顧客数</div>
+          <div class="chart-wrap"><canvas id="genreChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📍 エリア別顧客数</div>
+          <div class="chart-wrap"><canvas id="areaChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <script>
@@ -128,121 +212,112 @@
       });
     }
 
+    function makeKpiCard({ label, current, target, unit, statusFn, hint }) {
+      const { cls, badge } = statusFn(current, target);
+      const pct = target ? Math.min(100, Math.round(current / target * 100)) : 0;
+      return `
+        <div class="kpi-target-card ${cls}">
+          <div class="kpi-target-top">
+            <div class="kpi-target-label">${label}</div>
+            <div class="kpi-status-badge ${cls}">${badge}</div>
+          </div>
+          <div class="kpi-target-numbers">
+            <div class="kpi-target-current">${current}</div>
+            <div class="kpi-target-unit">${unit}${target ? ' / 目標 ' + target + unit : ''}</div>
+          </div>
+          ${target ? `
+          <div class="kpi-target-bar-wrap">
+            <div class="kpi-target-bar-bg">
+              <div class="kpi-target-bar-fill ${cls}" style="width:${pct}%"></div>
+            </div>
+            <div class="kpi-target-hint">${hint}</div>
+          </div>` : ''}
+        </div>`;
+    }
+
     async function loadStats() {
       const res  = await fetch('/stats/data');
       const data = await res.json();
+      const kpi  = data.kpi || {};
 
-      // KPI設定を取得して色分け
-      const kpi = data.kpi || {};
       const overdue  = data.summary.overdue_count;
       const follows  = data.summary.follows_this_month;
       const newCount = data.new_customers.reduce((s, r) => s + r.count, 0);
+      const noDate   = data.summary.total_active - data.summary.overdue_count -
+                       (data.completion_by_week.reduce((s,r)=>s+r.total,0) || 0);
 
-      // 期限超過カードの色分け
-      const overdueCard = document.querySelector('.kpi-card.red');
-      if (kpi.overdue_danger && overdue >= kpi.overdue_danger) {
-        overdueCard.style.borderTopColor = '#ef4444';
-        overdueCard.querySelector('.kpi-value').style.color = '#ef4444';
-        overdueCard.querySelector('.kpi-label').textContent = `期限超過 🔴 危険（${kpi.overdue_danger}件以上）`;
-      } else if (kpi.overdue_warning && overdue >= kpi.overdue_warning) {
-        overdueCard.style.borderTopColor = '#f59e0b';
-        overdueCard.querySelector('.kpi-value').style.color = '#f59e0b';
-        overdueCard.querySelector('.kpi-label').textContent = `期限超過 🟡 注意（${kpi.overdue_warning}件以上）`;
-      } else {
-        overdueCard.style.borderTopColor = '#059669';
-        overdueCard.querySelector('.kpi-value').style.color = '#059669';
-        overdueCard.querySelector('.kpi-label').textContent = '期限超過 🟢 良好';
-      }
+      // ① 目標KPIカード生成
+      const grid = document.getElementById('kpiTargetGrid');
+      grid.innerHTML = [
+        makeKpiCard({
+          label: '⚠️ 期限超過',
+          current: overdue,
+          target: kpi.overdue_danger || null,
+          unit: '件',
+          statusFn: (v, t) => {
+            if (kpi.overdue_danger && v >= kpi.overdue_danger)  return { cls: 'danger', badge: '🔴 危険' };
+            if (kpi.overdue_warning && v >= kpi.overdue_warning) return { cls: 'warn',   badge: '🟡 注意' };
+            return { cls: 'good', badge: '🟢 良好' };
+          },
+          hint: kpi.overdue_danger
+            ? `注意 ${kpi.overdue_warning || '-'}件 / 危険 ${kpi.overdue_danger}件`
+            : '管理画面で目標を設定してください',
+        }),
+        makeKpiCard({
+          label: '📝 今月のフォロー数',
+          current: follows,
+          target: kpi.monthly_follows_target || null,
+          unit: '件',
+          statusFn: (v, t) => {
+            if (!t) return { cls: 'neutral', badge: '目標未設定' };
+            if (v >= t)         return { cls: 'good',   badge: '🟢 目標達成' };
+            if (v >= t * 0.7)   return { cls: 'warn',   badge: `🟡 あと${t-v}件` };
+            return { cls: 'danger', badge: `🔴 あと${t-v}件` };
+          },
+          hint: kpi.monthly_follows_target ? `目標: ${kpi.monthly_follows_target}件` : '管理画面で目標を設定してください',
+        }),
+        makeKpiCard({
+          label: '🆕 今月の新規登録',
+          current: newCount,
+          target: kpi.monthly_new_target || null,
+          unit: '件',
+          statusFn: (v, t) => {
+            if (!t) return { cls: 'neutral', badge: '目標未設定' };
+            if (v >= t)         return { cls: 'good',   badge: '🟢 目標達成' };
+            if (v >= t * 0.7)   return { cls: 'warn',   badge: `🟡 あと${t-v}件` };
+            return { cls: 'danger', badge: `🔴 あと${t-v}件` };
+          },
+          hint: kpi.monthly_new_target ? `目標: ${kpi.monthly_new_target}件` : '管理画面で目標を設定してください',
+        }),
+      ].join('');
 
-      // 今月フォローカードの色分け
-      const followCard = document.querySelector('.kpi-card.blue');
-      const followTarget = kpi.monthly_follows_target || 0;
-      if (followTarget && follows >= followTarget) {
-        followCard.querySelector('.kpi-label').textContent = `今月フォロー数 🟢 目標達成（目標${followTarget}件）`;
-      } else if (followTarget) {
-        followCard.querySelector('.kpi-label').textContent = `今月フォロー数 🟡 目標${followTarget}件まであと${followTarget - follows}件`;
-      }
+      // ② サマリー
+      document.getElementById('kpiActive').textContent  = data.summary.total_active;
+      document.getElementById('kpiEnded').textContent   = data.summary.total_ended;
+      document.getElementById('kpiMonthly').textContent = follows;
+      document.getElementById('kpiNoDate').textContent  = '-';
 
-      // 新規登録カードを追加表示
-      const newTarget = kpi.monthly_new_target || 0;
-      document.getElementById('kpiActive').textContent   = data.summary.total_active;
-      document.getElementById('kpiMonthly').textContent  = follows;
-      document.getElementById('kpiOverdue').textContent  = overdue;
-      document.getElementById('kpiEnded').textContent    = data.summary.total_ended;
-
-      // 月別トレンド
-      makeBar('trendChart',
-        data.monthly_trend.map(r => r.month),
-        data.monthly_trend.map(r => r.count),
-        'フォロー数'
-      );
-
-      // 担当者別（今月）
-      makeBar('monthlyChart',
-        data.monthly_follows.map(r => r.assignee || '未設定'),
-        data.monthly_follows.map(r => r.count),
-        '今月'
-      );
-
-      // 担当者別（累計）
-      makeBar('totalChart',
-        data.total_follows.map(r => r.assignee || '未設定'),
-        data.total_follows.map(r => r.count),
-        '累計'
-      );
-
-      // ジャンル
-      makeDoughnut('genreChart',
-        data.by_genre.map(r => r.genre),
-        data.by_genre.map(r => r.count)
-      );
-
-      // エリア
-      makeDoughnut('areaChart',
-        data.by_area.map(r => r.area),
-        data.by_area.map(r => r.count)
-      );
-
-      // 期限超過の週次推移（目標ライン付き）
+      // ③ 期限超過の週次推移
       new Chart(document.getElementById('overdueChart'), {
         type: 'line',
         data: {
           labels: data.overdue_trend.map(r => r.week + '週'),
           datasets: [
-            {
-              label: '期限超過件数',
-              data: data.overdue_trend.map(r => r.overdue),
-              borderColor: '#ef4444',
-              backgroundColor: 'rgba(239,68,68,0.1)',
-              fill: true, tension: 0.3, pointRadius: 5,
-            },
-            kpi.overdue_warning ? {
-              label: `注意ライン（${kpi.overdue_warning}件）`,
+            { label: '期限超過件数', data: data.overdue_trend.map(r => r.overdue),
+              borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)',
+              fill: true, tension: 0.3, pointRadius: 5 },
+            kpi.overdue_warning ? { label: `注意（${kpi.overdue_warning}件）`,
               data: data.overdue_trend.map(() => kpi.overdue_warning),
-              borderColor: '#f59e0b', borderDash: [6, 3],
-              borderWidth: 2, pointRadius: 0, fill: false,
-            } : null,
-            kpi.overdue_danger ? {
-              label: `危険ライン（${kpi.overdue_danger}件）`,
+              borderColor: '#f59e0b', borderDash: [6,3], borderWidth: 2, pointRadius: 0, fill: false } : null,
+            kpi.overdue_danger ? { label: `危険（${kpi.overdue_danger}件）`,
               data: data.overdue_trend.map(() => kpi.overdue_danger),
-              borderColor: '#dc2626', borderDash: [6, 3],
-              borderWidth: 2, pointRadius: 0, fill: false,
-            } : null,
+              borderColor: '#dc2626', borderDash: [6,3], borderWidth: 2, pointRadius: 0, fill: false } : null,
           ].filter(Boolean)
         },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Noto Sans JP' }, boxWidth: 16 } } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
-
-      // 今月の新規登録（担当者別）
-      makeBar('newCustomersChart',
-        data.new_customers.map(r => r.assignee),
-        data.new_customers.map(r => r.count),
-        '新規登録数'
-      );
 
       // フォロー完了率
       new Chart(document.getElementById('completionChart'), {
@@ -251,15 +326,25 @@
           labels: data.completion_by_week.map(r => r.week + '週'),
           datasets: [
             { label: '期限内', data: data.completion_by_week.map(r => r.total - r.overdue), backgroundColor: '#059669', borderRadius: 4 },
-            { label: '超過', data: data.completion_by_week.map(r => r.overdue), backgroundColor: '#ef4444', borderRadius: 4 }
+            { label: '超過',   data: data.completion_by_week.map(r => r.overdue), backgroundColor: '#ef4444', borderRadius: 4 }
           ]
         },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Noto Sans JP' }, boxWidth: 16 } } },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
+
+      // 月別トレンド
+      makeBar('trendChart', data.monthly_trend.map(r => r.month), data.monthly_trend.map(r => r.count), 'フォロー数');
+
+      // 担当者別
+      makeBar('newCustomersChart', data.new_customers.map(r => r.assignee), data.new_customers.map(r => r.count), '新規登録');
+      makeBar('monthlyChart', data.monthly_follows.map(r => r.assignee || '未設定'), data.monthly_follows.map(r => r.count), '今月');
+      makeBar('totalChart', data.total_follows.map(r => r.assignee || '未設定'), data.total_follows.map(r => r.count), '累計');
+
+      // 顧客内訳
+      makeDoughnut('genreChart', data.by_genre.map(r => r.genre), data.by_genre.map(r => r.count));
+      makeDoughnut('areaChart',  data.by_area.map(r => r.area),   data.by_area.map(r => r.count));
     }
 
     loadStats();
