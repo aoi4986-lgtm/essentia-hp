@@ -1063,6 +1063,47 @@ def build_customer_context(cid):
     return c, ctx
 
 
+@app.route('/ocr/card', methods=['POST'])
+@login_required
+def ocr_card():
+    if not ai_client:
+        return jsonify({'error': 'AI機能が設定されていません'}), 500
+    file = request.files.get('image')
+    if not file:
+        return jsonify({'error': '画像が見つかりません'}), 400
+    import base64, json as _json
+    image_data  = base64.standard_b64encode(file.read()).decode('utf-8')
+    media_type  = file.content_type or 'image/jpeg'
+    if media_type not in ('image/jpeg', 'image/png', 'image/gif', 'image/webp'):
+        media_type = 'image/jpeg'
+    msg = ai_client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=400,
+        messages=[{
+            'role': 'user',
+            'content': [
+                {'type': 'image', 'source': {'type': 'base64', 'media_type': media_type, 'data': image_data}},
+                {'type': 'text', 'text': (
+                    'この名刺画像から情報を抽出してください。見つからない項目はnullにしてください。\n'
+                    'JSONのみを返してください（説明不要）：\n'
+                    '{"name":"氏名","company":"会社名","phone":"電話番号","email_address":"メールアドレス",'
+                    '"area":"都道府県名（例:大阪府）"}'
+                )}
+            ]
+        }]
+    )
+    text = msg.content[0].text.strip()
+    if '```' in text:
+        parts = text.split('```')
+        text = parts[1] if len(parts) > 1 else text
+        if text.startswith('json'):
+            text = text[4:]
+    try:
+        return jsonify(_json.loads(text.strip()))
+    except Exception:
+        return jsonify({'error': '読み取りに失敗しました。もう一度お試しください。'}), 500
+
+
 @app.route('/customers/<int:cid>/chat', methods=['POST'])
 @login_required
 def ai_chat(cid):

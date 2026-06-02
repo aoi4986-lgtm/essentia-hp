@@ -671,6 +671,30 @@ body {
 .btn-expect.selected { opacity: 1; filter: brightness(0.9); }
 .expect-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.3rem; }
 
+/* 名刺OCR */
+.ocr-area { display: flex; flex-direction: column; gap: 0.4rem; }
+.ocr-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  border: 2px dashed var(--green);
+  border-radius: 10px;
+  background: var(--green-light);
+  color: var(--green);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.ocr-btn:hover { background: #a7f3d0; }
+.ocr-status { font-size: 0.82rem; padding: 0.4rem 0.6rem; border-radius: 6px; }
+.ocr-status.loading { background: #eff6ff; color: #3b82f6; }
+.ocr-status.success { background: #d1fae5; color: #065f46; }
+.ocr-status.error   { background: #fee2e2; color: #991b1b; }
+
 /* 重複チェック警告 */
 .dup-warn {
   font-size: 0.78rem;

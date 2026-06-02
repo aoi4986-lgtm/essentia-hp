@@ -763,6 +763,53 @@ overlay.addEventListener('click', closePanel);
 document.getElementById('btnModalClose').addEventListener('click', closeModal);
 modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
 
+// --- 名刺OCR ---
+document.getElementById('cardImageInput').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('ocrStatus');
+  status.textContent = '🔍 読み取り中...';
+  status.className = 'ocr-status loading';
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const res  = await fetch('/ocr/card', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.error) {
+      status.textContent = '⚠ ' + data.error;
+      status.className = 'ocr-status error';
+      return;
+    }
+
+    // フォームに自動入力
+    if (data.name)          fName.value    = data.name;
+    if (data.company)       fCompany.value = data.company;
+    if (data.phone)         fPhone.value   = data.phone;
+    if (data.email_address) fEmail.value   = data.email_address;
+    if (data.area) {
+      // マスターのエリアと部分一致で選択
+      const match = masterAreas.find(a => data.area.includes(a.name) || a.name.includes(data.area));
+      if (match) fArea.value = match.name;
+    }
+
+    // 重複チェック実行
+    checkDuplicate();
+
+    const filled = [data.name, data.company, data.phone, data.email_address].filter(Boolean).length;
+    status.textContent = `✅ ${filled}項目を自動入力しました。内容を確認してください。`;
+    status.className = 'ocr-status success';
+  } catch {
+    status.textContent = '⚠ 読み取りに失敗しました。';
+    status.className = 'ocr-status error';
+  }
+
+  // ファイル入力をリセット（同じ画像を再選択できるように）
+  e.target.value = '';
+});
+
 // --- スマホメニュー ---
 const spMenu = document.getElementById('spMenu');
 const spMenuOverlay = document.getElementById('spMenuOverlay');
