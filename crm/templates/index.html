@@ -15,19 +15,34 @@
   <header class="header">
     <div class="header-inner">
       <h1 class="logo">顧客フォロー管理</h1>
-      <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
-        <span style="color:rgba(255,255,255,0.85);font-size:0.85rem;font-weight:500">👤 {{ user_name }}</span>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <span class="header-username" style="color:rgba(255,255,255,0.85);font-size:0.85rem;font-weight:500">👤 {{ user_name }}</span>
         <button class="btn btn-primary" id="btnAdd">＋ 顧客を追加</button>
-        <a href="/stats" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">📊 統計</a>
-        <a href="/export/csv" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">📥 CSV出力</a>
+        <a href="/stats" class="btn btn-ghost btn-pc-only" style="color:#fff;border-color:rgba(255,255,255,0.4)">📊 統計</a>
+        <a href="/export/csv" class="btn btn-ghost btn-pc-only" style="color:#fff;border-color:rgba(255,255,255,0.4)">📥 CSV出力</a>
         {% if user_role == 'admin' %}
-        <a href="/admin/users" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">⚙ ユーザー管理</a>
+        <a href="/admin/users" class="btn btn-ghost btn-pc-only" style="color:#fff;border-color:rgba(255,255,255,0.4)">⚙ ユーザー管理</a>
         {% endif %}
-        <button class="btn btn-ghost" id="btnChangePw" style="color:#fff;border-color:rgba(255,255,255,0.4)">🔑</button>
+        <button class="btn btn-ghost btn-pc-only" id="btnChangePw" style="color:#fff;border-color:rgba(255,255,255,0.4)">🔑</button>
+        <!-- スマホ用メニュー -->
+        <button class="btn btn-ghost btn-sp-only" id="btnMenu" style="color:#fff;border-color:rgba(255,255,255,0.4)">☰</button>
         <a href="/logout" class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.4)">ログアウト</a>
       </div>
     </div>
   </header>
+
+  <!-- スマホ用サイドメニュー -->
+  <div class="sp-menu-overlay" id="spMenuOverlay"></div>
+  <div class="sp-menu" id="spMenu">
+    <div class="sp-menu-title">👤 {{ user_name }}</div>
+    <a href="/stats">📊 統計</a>
+    <a href="/export/csv">📥 CSV出力</a>
+    {% if user_role == 'admin' %}
+    <a href="/admin/users">⚙ ユーザー管理</a>
+    {% endif %}
+    <button id="btnChangePwSp">🔑 パスワード変更</button>
+    <a href="/logout">ログアウト</a>
+  </div>
 
   <!-- パスワード変更モーダル -->
   <div class="modal-backdrop" id="changePwBackdrop">

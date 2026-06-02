@@ -763,6 +763,23 @@ overlay.addEventListener('click', closePanel);
 document.getElementById('btnModalClose').addEventListener('click', closeModal);
 modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
 
+// --- スマホメニュー ---
+const spMenu = document.getElementById('spMenu');
+const spMenuOverlay = document.getElementById('spMenuOverlay');
+document.getElementById('btnMenu')?.addEventListener('click', () => {
+  spMenu.classList.add('open');
+  spMenuOverlay.classList.add('open');
+});
+spMenuOverlay.addEventListener('click', () => {
+  spMenu.classList.remove('open');
+  spMenuOverlay.classList.remove('open');
+});
+document.getElementById('btnChangePwSp')?.addEventListener('click', () => {
+  spMenu.classList.remove('open');
+  spMenuOverlay.classList.remove('open');
+  changePwBackdrop.classList.add('open');
+});
+
 // --- Init ---
 loadMasters();
 loadCustomers();
