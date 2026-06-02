@@ -78,6 +78,7 @@ def init_db():
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS area TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS phone TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS email_address TEXT")
+    cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS address TEXT")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id)")
     cur.execute("ALTER TABLE customers ADD COLUMN IF NOT EXISTS updated_by INTEGER REFERENCES users(id)")
@@ -340,9 +341,10 @@ def add_customer():
     cur = conn.cursor()
     try:
         cur.execute(
-            'INSERT INTO customers (name, company, phone, email_address, assignee, genre, area, next_follow_date, notes, created_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
+            'INSERT INTO customers (name, company, phone, email_address, address, assignee, genre, area, next_follow_date, notes, created_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id',
             (name, sanitize(data.get('company')),
              sanitize(data.get('phone')), sanitize(data.get('email_address')),
+             sanitize(data.get('address')),
              sanitize(data.get('assignee')), sanitize(data.get('genre')),
              sanitize(data.get('area')),
              validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
@@ -374,9 +376,10 @@ def update_customer(cid):
     cur = conn.cursor()
     try:
         cur.execute(
-            'UPDATE customers SET name=%s, company=%s, phone=%s, email_address=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s, updated_by=%s WHERE id=%s',
+            'UPDATE customers SET name=%s, company=%s, phone=%s, email_address=%s, address=%s, assignee=%s, genre=%s, area=%s, next_follow_date=%s, notes=%s, updated_by=%s WHERE id=%s',
             (name, sanitize(data.get('company')),
              sanitize(data.get('phone')), sanitize(data.get('email_address')),
+             sanitize(data.get('address')),
              sanitize(data.get('assignee')), sanitize(data.get('genre')),
              sanitize(data.get('area')),
              validate_date(data.get('next_follow_date')), sanitize(data.get('notes')),
@@ -1006,7 +1009,7 @@ def export_csv():
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        'ID', '顧客名', '会社名', '電話番号', 'メールアドレス', '担当者', 'ジャンル', 'エリア',
+        'ID', '顧客名', '会社名', '電話番号', 'メールアドレス', '住所', '担当者', 'ジャンル', 'エリア',
         'ステータス', '次回フォロー日', 'メモ', '登録日', 'フォロー履歴'
     ])
     for c in customers:
@@ -1016,6 +1019,7 @@ def export_csv():
         writer.writerow([
             c['id'], c['name'], c['company'] or '',
             c.get('phone') or '', c.get('email_address') or '',
+            c.get('address') or '',
             c['assignee'] or '', c['genre'] or '', c.get('area') or '',
             status_label,
             c['next_follow_date'].isoformat() if c.get('next_follow_date') else '',
@@ -1087,7 +1091,7 @@ def ocr_card():
                     'この名刺画像から情報を抽出してください。見つからない項目はnullにしてください。\n'
                     'JSONのみを返してください（説明不要）：\n'
                     '{"name":"氏名","company":"会社名","phone":"電話番号","email_address":"メールアドレス",'
-                    '"area":"都道府県名（例:大阪府）"}'
+                    '"address":"住所（番地まで）","area":"都道府県名のみ（例:大阪府）"}'
                 )}
             ]
         }]

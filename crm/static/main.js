@@ -19,8 +19,9 @@ const fName = document.getElementById('fName');
 const fCompany = document.getElementById('fCompany');
 const fContact = document.getElementById('fContact');
 const fAssignee = document.getElementById('fAssignee');
-const fPhone = document.getElementById('fPhone');
-const fEmail = document.getElementById('fEmail');
+const fPhone   = document.getElementById('fPhone');
+const fEmail   = document.getElementById('fEmail');
+const fAddress = document.getElementById('fAddress');
 const fGenre = document.getElementById('fGenre');
 const fArea = document.getElementById('fArea');
 const fNextDate = document.getElementById('fNextDate');
@@ -264,6 +265,7 @@ function cardHTML(c) {
         ${c.area ? `<span><span class="icon">📍</span>${esc(c.area)}</span>` : ''}
         ${c.phone ? `<span><span class="icon">📞</span>${esc(c.phone)}</span>` : ''}
         ${c.email_address ? `<span><span class="icon">✉</span>${esc(c.email_address)}</span>` : ''}
+        ${c.address ? `<span><span class="icon">🏠</span>${esc(c.address)}</span>` : ''}
         ${c.assignee ? `<span><span class="icon">👤</span>担当: ${esc(c.assignee)}</span>` : ''}
       </div>
       <span class="follow-badge ${c.status}">${badgeLabel(c.status, c.next_follow_date || '')}</span>
@@ -368,8 +370,9 @@ function openEditPanel(id) {
   editId.value = c.id;
   fName.value = c.name || '';
   fCompany.value = c.company || '';
-  fPhone.value = c.phone || '';
-  fEmail.value = c.email_address || '';
+  fPhone.value   = c.phone || '';
+  fEmail.value   = c.email_address || '';
+  fAddress.value = c.address || '';
   fAssignee.value = c.assignee || '';
   fGenre.value = c.genre || '';
   fArea.value = c.area || '';
@@ -398,6 +401,7 @@ form.addEventListener('submit', async e => {
     company: fCompany.value.trim(),
     phone: fPhone.value.trim(),
     email_address: fEmail.value.trim(),
+    address: fAddress.value.trim(),
     assignee: fAssignee.value.trim(),
     genre: fGenre.value || null,
     area: fArea.value || null,
@@ -789,9 +793,12 @@ document.getElementById('cardImageInput').addEventListener('change', async e => 
     if (data.company)       fCompany.value = data.company;
     if (data.phone)         fPhone.value   = data.phone;
     if (data.email_address) fEmail.value   = data.email_address;
-    if (data.area) {
-      // マスターのエリアと部分一致で選択
-      const match = masterAreas.find(a => data.area.includes(a.name) || a.name.includes(data.area));
+    if (data.address)       fAddress.value = data.address;
+
+    // 住所またはareaフィールドからエリアを自動セット
+    const areaSource = data.area || data.address || '';
+    if (areaSource) {
+      const match = masterAreas.find(a => areaSource.includes(a.name));
       if (match) fArea.value = match.name;
     }
 
